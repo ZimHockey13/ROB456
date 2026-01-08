@@ -33,10 +33,22 @@ class DoorGroundTruth:
         # GUIDE  Part 1: Store door state
         # YOUR CODE HERE
 
+        self.door_open_state = door_open_state
+
         # GUIDE  Part 3: Store probabilities of door being opened if open action taken, etc
         #           (the transition table)
         #.         - set to uniform probabilities initially
         # YOUR CODE HERE
+
+        # [0,0] action to open when open
+        # [0,1] action to open when closed
+        # [1,0] action to close when open
+        # [1,1] action to close when closed
+
+        self.actions_probs = [[0.5,0.5],
+                              [0.5,0.5]]
+
+
 
     def set_probability(self, door_initial_state : bool, action : str, door_final_state : bool, prob : float):
         """Set the probability that the door will be in the final state if it started in the initial state and took
@@ -50,11 +62,24 @@ class DoorGroundTruth:
         # Probability values are always between 0 and 1
         assert 0.0 <= prob <= 1.0
 
-        # Action is one of "Open" or "closed" (checks the dictionary)
+        # Action is one of "Open" or "Closed" (checks the dictionary)
         assert action in DoorGroundTruth.actions
 
         # GUIDE: Part 3: Update your transition table
         # YOUR CODE HERE
+
+        row_ind = 1
+        if door_initial_state: row_ind = 0
+
+        col_ind = 1
+        if DoorGroundTruth.actions[action] == 0: row_ind = 0
+
+        if door_final_state:
+            self.actions_probs[row_ind,col_ind] = prob
+        else:
+            self.actions_probs[row_ind,col_ind] = 1-prob
+
+
 
     def robot_tries_to_open_door(self):
         """ The robot tries (once) to open the door, and succeeds (or fails) based on the probabilities in
@@ -86,6 +111,8 @@ class DoorGroundTruth:
         """ GUIDE Part 1: Return the door state as a boolean (Open - True/Closed - False)"""
         # YOUR CODE HERE
 
+        return self.door_open_state
+
     def __str__(self):
         """ Once you fill in get_door_state, this will print nicely """
         return f"Door state is: {self.get_door_state()}"
@@ -98,6 +125,7 @@ class DoorSensor():
         #.  The methods will be used to set the probabilities to something other than uniform
 
         # YOUR CODE HERE
+        self.prob_given_state = [0.5,0.5]
 
     def set_return_true_if_open_probability(self, prob: float):
         """ Set the probability of the sensor returning True if the door is open
@@ -109,6 +137,8 @@ class DoorSensor():
         # GUIDE: Part 2: Set the random variable to the probability value
         # YOUR CODE HERE
 
+        self.prob_given_state[0] = prob
+
     def set_return_false_if_closed_probability(self, prob: float):
         """ Set the probability of the sensor returning False if the door is closed
         @param prob - the probability value (between 0 and 1) """
@@ -118,6 +148,8 @@ class DoorSensor():
 
         # GUIDE: Set the random variable to the probability value
         # YOUR CODE HERE
+
+        self.prob_given_state[1] = 1-prob
 
     def sample_sensor(self, door_ground_truth : DoorGroundTruth):
         """ Sample the sensor
@@ -130,6 +162,16 @@ class DoorSensor():
         #.  first problem in the jupyter notebook.
         #.
         # YOUR CODE HERE
+
+        prob_true = self.prob_given_state[1]
+        if door_ground_truth.get_door_state():
+            prob_true = self.prob_given_state[0]
+
+        if np.random.uniform() < prob_true:
+            return True
+        else:
+            return False
+
 
 
 # Check if the door and sensor are working correctly
