@@ -40,13 +40,13 @@ class DoorGroundTruth:
         #.         - set to uniform probabilities initially
         # YOUR CODE HERE
 
-        # [0,0] action to open when open
-        # [0,1] action to open when closed
-        # [1,0] action to close when open
-        # [1,1] action to close when closed
+        # probability of ending state being open
+        # [0][0] action to open when open 
+        # [0][1] action to open when closed
+        # [1][0] action to close when open
+        # [1][1] action to close when closed
 
-        self.actions_probs = [[0.5,0.5],
-                              [0.5,0.5]]
+        self.actions_probs = [[0.5,0.5],[0.5,0.5]]
 
 
 
@@ -72,12 +72,12 @@ class DoorGroundTruth:
         if door_initial_state: row_ind = 0
 
         col_ind = 1
-        if DoorGroundTruth.actions[action] == 0: row_ind = 0
+        if DoorGroundTruth.actions[action] == 0: col_ind = 0
 
         if door_final_state:
-            self.actions_probs[row_ind,col_ind] = prob
+            self.actions_probs[row_ind][col_ind] = prob
         else:
-            self.actions_probs[row_ind,col_ind] = 1-prob
+            self.actions_probs[row_ind][col_ind] = 1-prob
 
 
 
@@ -95,6 +95,15 @@ class DoorGroundTruth:
 
         # YOUR CODE HERE
 
+        row_ind = 1
+        if self.door_open_state: row_ind = 0
+        col_ind = 0
+
+        if np.random.uniform() < self.actions_probs[row_ind][col_ind]:
+            self.door_open_state = True
+        else:
+            self.door_open_state = False
+
         return self.get_door_state()
 
     def robot_tries_to_close_door(self):
@@ -104,6 +113,15 @@ class DoorGroundTruth:
         #.  Same as opening, but this time try closing 
 
         # YOUR CODE HERE
+
+        row_ind = 1
+        if self.door_open_state: row_ind = 0
+        col_ind = 1
+
+        if np.random.uniform() < self.actions_probs[row_ind][col_ind]:
+            self.door_open_state = True
+        else:
+            self.door_open_state = False
 
         return self.get_door_state()
 
