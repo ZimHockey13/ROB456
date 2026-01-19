@@ -24,6 +24,13 @@ class RobotSensors:
         # GUIDE: Create the variable to store the probabilities
         # YOUR CODE HERE
 
+        self.door_probs = {
+            "is door": {},
+            "no door": {}
+        }
+
+        self.wall_probs = {}
+
         # In the GUI version, these will be called with values from the GUI after the RobotSensors instance
         #   has been created
         # Actually SET the values for the dictionaries
@@ -41,6 +48,17 @@ class RobotSensors:
         #  Second note: all variables should be referenced with self.
         # YOUR CODE HERE
 
+        # assert np.isclose(in_prob_see_door_if_not_door+in_prob_see_door_if_door, 1)
+
+        self.door_probs["is door"] ={
+            "sees door": in_prob_see_door_if_door,
+            "snot door": 1-in_prob_see_door_if_door
+        }
+        self.door_probs["no door"] ={
+            "sees door": in_prob_see_door_if_not_door,
+            "snot door": 1-in_prob_see_door_if_not_door
+        }
+
     def set_distance_wall_sensor_probabilities(self, sigma=0.1):
         """ Setup the wall sensor probabilities (store them in the dictionary)
         Note: Mean is zero for this assignment
@@ -49,6 +67,9 @@ class RobotSensors:
         # Kalman and particle filter assignment
         # GUIDE: Store the Gaussian (reminder, mean for location is zero)
         # YOUR CODE HERE
+
+        self.wall_probs = {"sigma": sigma}
+
 
     def query_door(self, robot_gt:RobotGroundTruth, world_gt:WorldGroundTruth):
         """ Query the door sensor
@@ -60,18 +81,30 @@ class RobotSensors:
         # Bayes assignment and particle filter
         # I've handled the checking if the robot is in front of the door (y/n) part for you
         # This is the ground truth - True if robot is actually in front of the door, False otherwise
-        #  Use this to determine which random variable to use
+        # Use this to determine which random variable to use
         # is_in_front_of_door is a Boolean, which is True if the actual robot is in front of an actual door
         is_in_front_of_door = world_gt.is_location_in_front_of_door(robot_gt.robot_loc)
 
         # GUIDE:
         #  This is the place where you need a 4-way if statement
-        #   First if statement: Is the robot in front of the door?
+        #  First if statement: Is the robot in front of the door?
         # STEP 1 - generate a random number between 0 and 1
         # STEP 2 - use the random number (and your first if statement) to determine if you should return True or False
         # Note: Step 2 is just the sample_boolean code from your probabilities assignment
         
         # YOUR CODE HERE
+        rand_val = np.random.uniform()
+        if is_in_front_of_door:
+            if rand_val < self.door_probs["is door"]["sees door"]:
+                return True
+            else:
+                return False
+        else:
+            if rand_val < self.door_probs["no door"]["sees door"]:
+                return True
+            else:
+                return False
+
 
     def query_distance_to_wall(self, robot_gt: RobotGroundTruth):
         """ Return a distance reading (with correct noise) of the robot's location
@@ -84,6 +117,16 @@ class RobotSensors:
         # GUIDE: Return the distance to the wall (with noise)
         #  This is the Gaussian assignment from your probabilities homework
         # YOUR CODE HERE
+
+        true_wall_dist = robot_gt.robot_loc
+
+        # i dont know if i want to measure from right wall or from left wall
+
+        # from left wall:
+        return np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
+
+        # from right wall:
+        # return np.random.normal(0, self.wall_probs["sigma"], size=None) + (1-true_wall_dist)
 
 
 def test_discrete_sensors(b_print=True):
