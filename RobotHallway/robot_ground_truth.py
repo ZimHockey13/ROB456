@@ -63,6 +63,18 @@ class RobotGroundTruth:
 
         # YOUR CODE HERE
 
+        assert move_left > 0 and move_left < 1
+        assert move_right > 0 and move_right < 1
+        # assert np.isclose(move_left + move_right, 1)
+
+        self.move_probabilities["move_left"] = {
+            "left": move_left,
+            "right": move_right,
+            "none": 1 - (move_left+move_right)
+        }
+
+        assert np.isclose(self.move_probabilities["move_left"]["left"] + self.move_probabilities["move_left"]["right"] + self.move_probabilities["move_left"]["none"], 1)
+
     def set_move_right_probabilities(self, move_left=0.05, move_right=0.8):
         """ Set the three discrete probabilities for moving right (should sum to one and all be positive)
         @param move_left - the probability of actually moving left
@@ -76,6 +88,18 @@ class RobotGroundTruth:
 
         # YOUR CODE HERE
 
+        assert move_left > 0 and move_left < 1
+        assert move_right > 0 and move_right < 1
+        # assert np.isclose(move_left + move_right, 1)
+
+        self.move_probabilities["move_right"] = {
+            "left": move_left,
+            "right": move_right,
+            "none": 1 - (move_left+move_right)
+        }
+
+        assert np.isclose(self.move_probabilities["move_right"]["left"] + self.move_probabilities["move_right"]["right"] + self.move_probabilities["move_right"]["none"], 1)
+
     def set_move_continuos_probabilities(self, sigma=0.1):
         """ Set the noise for continuous movement
         Note - mean is zero for this assignment
@@ -87,6 +111,13 @@ class RobotGroundTruth:
         # Check that sigma is positive
 
         # YOUR CODE HERE
+
+        assert sigma > 0
+
+        self.move_probabilities["move_continuous"] = {
+            "sigma": sigma
+        }
+
 
     # Just a helper function to place robot in middle of bin
     def _adjust_middle_of_bin(self, n_divs):
@@ -135,6 +166,11 @@ class RobotGroundTruth:
         step_dir = 0
 
         # YOUR CODE HERE
+        rand_val = np.random.uniform()
+        if rand_val < self.move_probabilities["move_left"]["left"]:
+            step_dir = -1
+        elif rand_val < self.move_probabilities["move_left"]["left"]+self.move_probabilities["move_left"]["right"]:
+            step_dir = 1
 
         # This returns the actual move amount, clamped to 0, 1
         #   i.e., don't run off the end of the hallway
@@ -151,6 +187,12 @@ class RobotGroundTruth:
 
         # YOUR CODE HERE
 
+        rand_val = np.random.uniform()
+        if rand_val < self.move_probabilities["move_right"]["right"]:
+            step_dir = 1
+        elif rand_val < self.move_probabilities["move_right"]["right"]+self.move_probabilities["move_right"]["left"]:
+            step_dir = -1
+
         return self._move_clamped_discrete(step_dir * step_size)
 
     def move_continuous(self, amount):
@@ -160,7 +202,7 @@ class RobotGroundTruth:
 
         # Kalman assignment
         # GUIDE Set noisy_amount to be the amount to move, plus noise
-        noisy_amount = amount
+        noisy_amount = amount + np.random.normal(0, self.move_probabilities["move_continuous"]["sigma"], size=None)
 
         # YOUR CODE HERE
 
