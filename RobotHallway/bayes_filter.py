@@ -128,7 +128,31 @@ class BayesFilter:
 
         # YOUR CODE HERE
 
-        
+        new_probs = np.zeros(self.n_bins())
+
+        prob_left = robot_ground_truth.move_probabilities["move_left"]["left"]
+        prob_right = robot_ground_truth.move_probabilities["move_left"]["right"]
+        prob_stay = robot_ground_truth.move_probabilities["move_left"]["none"]
+
+        # print(f"starting: {self.loc_probs}")
+
+        for indx, prob in enumerate(self.loc_probs):
+
+            if indx == 0:
+                new_probs[indx] = self.loc_probs[indx] * (prob_left + prob_stay) + self.loc_probs[indx+1] * prob_left
+
+            elif indx == len(self.loc_probs)-1:
+                new_probs[indx] = self.loc_probs[indx] * (prob_right + prob_stay) + self.loc_probs[indx-1] * prob_right
+
+            else:
+                new_probs[indx] = self.loc_probs[indx] * prob_stay + self.loc_probs[indx-1] * prob_right + self.loc_probs[indx+1] * prob_left
+
+        # print(new_probs)
+        new_probs = new_probs/np.sum(new_probs)
+        self.loc_probs = new_probs
+        # print(f"Final: {self.loc_probs}")
+
+
 
     def update_belief_move_right(self, robot_ground_truth: RobotGroundTruth):
         """ Update the probabilities assuming a move right.
@@ -138,6 +162,31 @@ class BayesFilter:
         # GUIDE: bayes assignment
         #.  Calculate new probabilities based on a move right
         # YOUR CODE HERE
+
+        new_probs = np.zeros(self.n_bins())
+
+        prob_left = robot_ground_truth.move_probabilities["move_right"]["left"]
+        prob_right = robot_ground_truth.move_probabilities["move_right"]["right"]
+        prob_stay = robot_ground_truth.move_probabilities["move_right"]["none"]
+
+        # print(f"starting: {self.loc_probs}")
+
+        for indx, prob in enumerate(self.loc_probs):
+
+            if indx == 0:
+                new_probs[indx] = self.loc_probs[indx] * (prob_left + prob_stay) + self.loc_probs[indx+1] * prob_left
+
+            elif indx == len(self.loc_probs)-1:
+                new_probs[indx] = self.loc_probs[indx] * (prob_right + prob_stay) + self.loc_probs[indx-1] * prob_right
+
+            else:
+                new_probs[indx] = self.loc_probs[indx] * prob_stay + self.loc_probs[indx-1] * prob_right + self.loc_probs[indx+1] * prob_left
+
+        # print(new_probs)
+        new_probs = new_probs/np.sum(new_probs)
+        self.loc_probs = new_probs
+        # print(f"final: {self.loc_probs}")
+
 
     def one_full_update(self, 
                         world_ground_truth: WorldGroundTruth, 
@@ -158,6 +207,13 @@ class BayesFilter:
         #  Step 1 predict: update your belief by the action (call one of update_belief_move_left or update_belief_move_right)
         #  Step 2 correct: do the correction step (update belief by the sensor reading)
         # YOUR CODE HERE
+
+        if u == "move_left":
+            self.update_belief_move_left(robot_ground_truth)
+        elif u == "move_right":
+            self.update_belief_move_right(robot_ground_truth)
+        
+        self.update_belief_sensor_reading(world_ground_truth, robot_sensor, z)
 
 
 def check_uniform(bf: BayesFilter):
@@ -306,9 +362,12 @@ def test_move_one_direction(b_print=True):
             dir_update(robot_ground_truth)
 
         if not bayes_filter.probability(bin_id) > 0.9:
+            # print(bayes_filter.loc_probs)
             raise ValueError(f"Expected all of the probability to be in the {bin_id} bin, was {bayes_filter.probability(bin_id)}")
         if b_print:
             print("Passed")
+            # print(f"Expected all of the probability to be in the {bin_id} bin, was {bayes_filter.probability(bin_id)}")
+            # print(bayes_filter.loc_probs)
 
     return True
 
@@ -332,16 +391,17 @@ if __name__ == '__main__':
     bayes_filter_syntax.update_belief_sensor_reading(world_ground_truth_syntax, robot_sensor_syntax, True)
 
     # # Syntax check 3, move
-    # bayes_filter_syntax.update_belief_move_left(robot_ground_truth_syntax)
-    # bayes_filter_syntax.update_belief_move_right(robot_ground_truth_syntax)
+    bayes_filter_syntax.update_belief_move_left(robot_ground_truth_syntax)
+    bayes_filter_syntax.update_belief_move_right(robot_ground_truth_syntax)
 
     # # Syntax check 4, full update
-    # bayes_filter_syntax.one_full_update(world_ground_truth_syntax, robot_ground_truth_syntax, robot_sensor_syntax, "move_left", True)
+    bayes_filter_syntax.one_full_update(world_ground_truth_syntax, robot_ground_truth_syntax, robot_sensor_syntax, "move_left", True)
 
     # The tests
     test_bayes_filter_sensor_update(b_print_test)
-    # test_move_one_direction(b_print_test)
+    test_move_one_direction(b_print_test)
 
-    # test_bayes_move_update(b_print_test)
+    from make_tests import test_bayes_move_update
+    test_bayes_move_update(b_print_test)
 
     print("Done")
