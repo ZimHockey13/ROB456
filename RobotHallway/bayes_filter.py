@@ -228,8 +228,9 @@ def check_uniform(bf: BayesFilter):
 
     n_per = 1.0 / bf.n_bins()
     for indx in range(0, bf.n_bins()):
-        if not np.isclose(bf.probability(indx), n_per):
-            raise ValueError(f"Check uniform, expected {n_per} in all bins, got {p}")
+        prob = bf.probability(indx)
+        if not np.isclose(prob, n_per):
+            raise ValueError(f"Check uniform, expected {n_per} in all bins, got {prob}")
     return True
 
 
