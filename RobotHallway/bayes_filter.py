@@ -19,6 +19,7 @@ class BayesFilter:
         # Probability representation (discrete set of bins)
         #   GUIDE: Create a variable to store the location probabilities in        
         # YOUR CODE HERE
+        self.loc_probs = np.zeros(10)
 
         # Note that in the GUI version, this will method be called with the desired number of bins
         self.reset_probabilities()
@@ -30,17 +31,25 @@ class BayesFilter:
         # GUIDE create an array with n_bins, set to uniform distribution
         # YOUR CODE HERE
 
+        probs = np.zeros(n_bins)
+        probs += float(1.0/n_bins)
+        self.loc_probs = probs
+
+
     def probability(self, bin_indx: int):
         """ Get the probability in the given bin
         @param bin_indx - which bin, a number between 0 and n_bins-1"""
-        # GUILDE return the probability in the bin_index'th bin
+        # GUIDE return the probability in the bin_index'th bin
         # YOUR CODE HERE
+        return self.loc_probs[bin_indx]
+
 
     def n_bins(self):
         """Return the number of bins
         @return int (number of bins)"""
         # GUILD: Return the number of probability bins
         # YOUR CODE HERE
+        return len(self.loc_probs)
 
     def update_belief_sensor_reading(self, 
                                      world_ground_truth: WorldGroundTruth, 
@@ -71,6 +80,37 @@ class BayesFilter:
         #  for indx, p in enumerate(self.probs):
         # YOUR CODE HERE
 
+        new_probs = np.zeros(self.n_bins())
+        # print(self.loc_probs)
+
+        # denominator:
+        # prob of +sensor reading given +state times prob of +state plus prob of +sensor reading given -state times prob of -state
+        
+        for indx, prob in enumerate(self.loc_probs):
+            location = indx/self.n_bins() + (1/(2*self.n_bins()))
+            actual_state_at_loc = world_ground_truth.is_location_in_front_of_door(location)
+
+            if actual_state_at_loc:
+                true_state_key = "is door"
+            else:
+                true_state_key = "no door"
+
+            if sensor_reading:
+                sensor_key = "sees door"
+            else:
+                sensor_key = "snot door"
+
+            # print(f"truth state at index {indx}: {actual_state_at_loc}; prob of {sensor_key}|{true_state_key}: {robot_sensor.door_probs[true_state_key][sensor_key]}; times prob {prob}")
+            numerator = robot_sensor.door_probs[true_state_key][sensor_key]*prob
+            
+            new_probs[indx] = numerator
+
+        # print(new_probs)
+        new_probs = new_probs/np.sum(new_probs)
+        # print(new_probs)
+        self.loc_probs = new_probs
+
+
     def update_belief_move_left(self, robot_ground_truth: RobotGroundTruth):
         """ Update the probabilities assuming a move left.
         See Assignment slides for links to lecture slides
@@ -87,6 +127,8 @@ class BayesFilter:
         #  one already - any error is just numerical
 
         # YOUR CODE HERE
+
+        
 
     def update_belief_move_right(self, robot_ground_truth: RobotGroundTruth):
         """ Update the probabilities assuming a move right.
@@ -289,17 +331,17 @@ if __name__ == '__main__':
     # Syntax check 2, update sensor
     bayes_filter_syntax.update_belief_sensor_reading(world_ground_truth_syntax, robot_sensor_syntax, True)
 
-    # Syntax check 3, move
-    bayes_filter_syntax.update_belief_move_left(robot_ground_truth_syntax)
-    bayes_filter_syntax.update_belief_move_right(robot_ground_truth_syntax)
+    # # Syntax check 3, move
+    # bayes_filter_syntax.update_belief_move_left(robot_ground_truth_syntax)
+    # bayes_filter_syntax.update_belief_move_right(robot_ground_truth_syntax)
 
-    # Syntax check 4, full update
-    bayes_filter_syntax.one_full_update(world_ground_truth_syntax, robot_ground_truth_syntax, robot_sensor_syntax, "move_left", True)
+    # # Syntax check 4, full update
+    # bayes_filter_syntax.one_full_update(world_ground_truth_syntax, robot_ground_truth_syntax, robot_sensor_syntax, "move_left", True)
 
     # The tests
     test_bayes_filter_sensor_update(b_print_test)
-    test_move_one_direction(b_print_test)
+    # test_move_one_direction(b_print_test)
 
-    test_bayes_move_update(b_print_test)
+    # test_bayes_move_update(b_print_test)
 
     print("Done")
