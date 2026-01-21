@@ -48,7 +48,7 @@ class RobotSensors:
         #  Second note: all variables should be referenced with self.
         # YOUR CODE HERE
 
-        # assert np.isclose(in_prob_see_door_if_not_door+in_prob_see_door_if_door, 1)
+        # does not need to sum to 1, because these are conditional probabilities based on if there is a door or not
 
         self.door_probs["is door"] ={
             "sees door": in_prob_see_door_if_door,
@@ -120,8 +120,6 @@ class RobotSensors:
         # YOUR CODE HERE
 
         true_wall_dist = robot_gt.robot_loc
-
-        # i dont know if i want to measure from right wall or from left wall
 
         # from left wall:
         # print("np.random.normal called in query_distance_to_wall")

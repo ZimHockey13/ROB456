@@ -66,6 +66,8 @@ class RobotGroundTruth:
 
         assert move_left > 0 and move_left < 1
         assert move_right > 0 and move_right < 1
+
+        # dont need to sum to 1 bc of none
         # assert np.isclose(move_left + move_right, 1)
 
         self.move_probabilities["move_left"] = {
@@ -74,6 +76,7 @@ class RobotGroundTruth:
             "none": 1 - (move_left+move_right)
         }
 
+        # make sure all probs sum to 1
         assert np.isclose(self.move_probabilities["move_left"]["left"] + self.move_probabilities["move_left"]["right"] + self.move_probabilities["move_left"]["none"], 1)
 
     def set_move_right_probabilities(self, move_left=0.05, move_right=0.8):
@@ -91,6 +94,8 @@ class RobotGroundTruth:
 
         assert move_left > 0 and move_left < 1
         assert move_right > 0 and move_right < 1
+
+        # dont need to sum to 1 bc of none
         # assert np.isclose(move_left + move_right, 1)
 
         self.move_probabilities["move_right"] = {
@@ -99,6 +104,7 @@ class RobotGroundTruth:
             "none": 1 - (move_left+move_right)
         }
 
+        # make sure all probs sum to 1
         assert np.isclose(self.move_probabilities["move_right"]["left"] + self.move_probabilities["move_right"]["right"] + self.move_probabilities["move_right"]["none"], 1)
 
     def set_move_continuos_probabilities(self, sigma=0.1):
@@ -176,6 +182,9 @@ class RobotGroundTruth:
         else:
             step_dir = 1
 
+        # this works because none, left, and right sum to 1 therefore if it is not less than none or left it must be right
+        # this is the handling if rand_val is greater than both none and left there cannot be an issue here [even if rand_val > sum(none,left,right) (which it can't be) the else will catch it and return 1]
+
         # This returns the actual move amount, clamped to 0, 1
         #   i.e., don't run off the end of the hallway
         return self._move_clamped_discrete(step_dir * step_size)
@@ -197,7 +206,10 @@ class RobotGroundTruth:
         elif rand_val < self.move_probabilities["move_right"]["none"]+self.move_probabilities["move_right"]["left"]:
             step_dir = -1
         else:
-            step_dir = 1    
+            step_dir = 1   
+
+        # this works because none, left, and right sum to 1 therefore if it is not less than none or left it must be right
+        # this is the handling if rand_val is greater than both none and left there cannot be an issue here [even if rand_val > sum(none,left,right) (which it can't be) the else will catch it and return 1] 
 
         return self._move_clamped_discrete(step_dir * step_size)
 
@@ -210,8 +222,6 @@ class RobotGroundTruth:
         # GUIDE Set noisy_amount to be the amount to move, plus noise
         # print("np.random.normal called in move_continuous")
         noisy_amount = amount + np.random.normal(0, self.move_probabilities["move_continuous"]["sigma"], size=None)
-
-        # YOUR CODE HERE
 
         # Actually move (don't run off of end)
         return self._move_clamped_continuous(noisy_amount)

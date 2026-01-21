@@ -81,7 +81,6 @@ class BayesFilter:
         # YOUR CODE HERE
 
         new_probs = np.zeros(self.n_bins())
-        # print(self.loc_probs)
 
         # denominator:
         # prob of +sensor reading given +state times prob of +state plus prob of +sensor reading given -state times prob of -state
@@ -105,9 +104,9 @@ class BayesFilter:
             
             new_probs[indx] = numerator
 
-        # print(new_probs)
+        # normalize
         new_probs = new_probs/np.sum(new_probs)
-        # print(new_probs)
+
         self.loc_probs = new_probs
 
 
@@ -134,8 +133,6 @@ class BayesFilter:
         prob_right = robot_ground_truth.move_probabilities["move_left"]["right"]
         prob_stay = robot_ground_truth.move_probabilities["move_left"]["none"]
 
-        # print(f"starting: {self.loc_probs}")
-
         for indx, prob in enumerate(self.loc_probs):
 
             if indx == 0:
@@ -147,10 +144,10 @@ class BayesFilter:
             else:
                 new_probs[indx] = self.loc_probs[indx] * prob_stay + self.loc_probs[indx-1] * prob_right + self.loc_probs[indx+1] * prob_left
 
-        # print(new_probs)
+        # normalize, just in case
         new_probs = new_probs/np.sum(new_probs)
+
         self.loc_probs = new_probs
-        # print(f"Final: {self.loc_probs}")
 
 
 
@@ -169,8 +166,6 @@ class BayesFilter:
         prob_right = robot_ground_truth.move_probabilities["move_right"]["right"]
         prob_stay = robot_ground_truth.move_probabilities["move_right"]["none"]
 
-        # print(f"starting: {self.loc_probs}")
-
         for indx, prob in enumerate(self.loc_probs):
 
             if indx == 0:
@@ -182,10 +177,10 @@ class BayesFilter:
             else:
                 new_probs[indx] = self.loc_probs[indx] * prob_stay + self.loc_probs[indx-1] * prob_right + self.loc_probs[indx+1] * prob_left
 
-        # print(new_probs)
+        # normalize, just in case
         new_probs = new_probs/np.sum(new_probs)
+
         self.loc_probs = new_probs
-        # print(f"final: {self.loc_probs}")
 
 
     def one_full_update(self, 
@@ -212,6 +207,8 @@ class BayesFilter:
             self.update_belief_move_left(robot_ground_truth)
         elif u == "move_right":
             self.update_belief_move_right(robot_ground_truth)
+        else:
+            raise ValueError(f"one_full_update: unknown action {u}")
         
         self.update_belief_sensor_reading(world_ground_truth, robot_sensor, z)
 
