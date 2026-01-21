@@ -48,6 +48,7 @@ class RobotGroundTruth:
 
     def place_random(self):
         """ Put robot in a random location in the hallway """
+        # print("np.random called in place_random")
         self.robot_loc = np.random.uniform()
 
     def set_move_left_probabilities(self, move_left:float=0.8, move_right:float=0.05):
@@ -166,10 +167,13 @@ class RobotGroundTruth:
         step_dir = 0
 
         # YOUR CODE HERE
+        # print("np.random called in move_left")
         rand_val = np.random.uniform()
-        if rand_val < self.move_probabilities["move_left"]["left"]:
+        if rand_val < self.move_probabilities["move_left"]["none"]:
+            step_dir = 0
+        elif rand_val < self.move_probabilities["move_left"]["none"]+self.move_probabilities["move_left"]["left"]:
             step_dir = -1
-        elif rand_val < self.move_probabilities["move_left"]["left"]+self.move_probabilities["move_left"]["right"]:
+        else:
             step_dir = 1
 
         # This returns the actual move amount, clamped to 0, 1
@@ -183,15 +187,17 @@ class RobotGroundTruth:
 
         # Bayes assignment
         # Set step_dir to -1 (left), 0 (stay put) or 1 (right) based on sampling the move_right variable
-        step_dir = 0
+        step_dir = -1
 
         # YOUR CODE HERE
-
+        # print("np.random called in move_right")
         rand_val = np.random.uniform()
-        if rand_val < self.move_probabilities["move_right"]["right"]:
-            step_dir = 1
-        elif rand_val < self.move_probabilities["move_right"]["right"]+self.move_probabilities["move_right"]["left"]:
+        if rand_val < self.move_probabilities["move_right"]["none"]:
+            step_dir = 0
+        elif rand_val < self.move_probabilities["move_right"]["none"]+self.move_probabilities["move_right"]["left"]:
             step_dir = -1
+        else:
+            step_dir = 1    
 
         return self._move_clamped_discrete(step_dir * step_size)
 
@@ -202,6 +208,7 @@ class RobotGroundTruth:
 
         # Kalman assignment
         # GUIDE Set noisy_amount to be the amount to move, plus noise
+        # print("np.random.normal called in move_continuous")
         noisy_amount = amount + np.random.normal(0, self.move_probabilities["move_continuous"]["sigma"], size=None)
 
         # YOUR CODE HERE
@@ -213,6 +220,7 @@ class RobotGroundTruth:
 def test_discrete_move_functions(b_print=True):
     """ Check that moving all the way left (or right) pushes the robot to the left (or right)
     @param b_print - do print statements, yes/no"""
+    # print("np.random seed set to 5 for testing discrete move functions")
     np.random.seed(5)
 
     rgt = RobotGroundTruth()

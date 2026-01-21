@@ -32,6 +32,7 @@ class WorldGroundTruth:
         # Randomly pick a door location until sufficient door locations filled
         while sum(door_loc) < n_doors:
             # Pick a random location in 0,1
+            # print("np.random called in random_door_placement")
             loc = np.random.uniform(0, 1)
             # Convert to a bin
             i_loc = min(int(n_bins), max(0, int(np.floor(loc / div))))

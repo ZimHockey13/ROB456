@@ -304,6 +304,7 @@ def test_bayes_filter_sensor_update(b_print:bool =True):
 
     if b_print:
         print("Checking Bayes filter sensor update")
+    # print("np.random seed set to 2 for testing bayes filter sensor update")
     np.random.seed(2)
 
     # Initialize with values that are NOT the default ones
@@ -342,6 +343,7 @@ def test_move_one_direction(b_print=True):
 
     if b_print:
         print("Testing move in one direction")
+    # print("np.random seed set to 20 for testing move in one direction")
     np.random.seed(20)
 
     # Try the left, then the right move

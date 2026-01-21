@@ -93,6 +93,7 @@ class RobotSensors:
         # Note: Step 2 is just the sample_boolean code from your probabilities assignment
         
         # YOUR CODE HERE
+        # print("np.random called in query_door")
         rand_val = np.random.uniform()
         if is_in_front_of_door:
             if rand_val < self.door_probs["is door"]["sees door"]:
@@ -123,6 +124,7 @@ class RobotSensors:
         # i dont know if i want to measure from right wall or from left wall
 
         # from left wall:
+        # print("np.random.normal called in query_distance_to_wall")
         return np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
 
         # from right wall:
@@ -132,6 +134,7 @@ class RobotSensors:
 def test_discrete_sensors(b_print=True):
     """ Test that the door sensor is working correctly
     @param b_print - do print statements, yes/no"""
+    # print("np.random seed set to 3 for testing discrete sensors")
     np.random.seed(3)
 
     robot_gt = RobotGroundTruth()
