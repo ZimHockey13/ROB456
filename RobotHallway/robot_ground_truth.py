@@ -230,6 +230,7 @@ class RobotGroundTruth:
 def test_discrete_move_functions(b_print=True):
     """ Check that moving all the way left (or right) pushes the robot to the left (or right)
     @param b_print - do print statements, yes/no"""
+    
     # print("np.random seed set to 5 for testing discrete move functions")
     np.random.seed(5)
 

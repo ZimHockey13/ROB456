@@ -96,11 +96,15 @@ class KalmanFilter:
         # GUIDE: Calculate C and K, then update the Gaussian
         # YOUR CODE HERE
 
-        K = self.sigma**2 / (self.sigma**2 + robot_sensors.wall_probs['sigma']**2)
+        # not squared when using the matracies equations
+        # K = self.sigma**2 / (self.sigma**2 + robot_sensors.wall_probs['sigma']**2)
+        K = self.C*self.sigma / (self.C**2 * self.sigma + robot_sensors.wall_probs['sigma'])
 
         # Update belief
-        self.x_mu = self.x_mu + K * (dist_reading - self.x_mu)
-        self.sigma = np.sqrt((1 - K) * self.sigma**2)
+        self.x_mu = self.x_mu + K * (dist_reading - self.C*self.x_mu)
+        self.sigma = (1 - self.C*K) * self.sigma
+
+        # the following code could've been used if we wanted a 2D state [position, velocity]
 
         # Kalman gain
         # K = self.sigma @ self.C.T @ np.linalg.inv(self.C @ self.sigma @ self.C.T + robot_sensors.wall_probs['sigma'])
@@ -123,11 +127,12 @@ class KalmanFilter:
         # GUIDE: Update mu and sigma by Ax + Bu equation
         # YOUR CODE HERE
 
-        # Sensor noise
-        R_sensor_sigma = robot_ground_truth.move_probabilities["move_continuous"]['sigma']
+        # Movement noise
+        R_movement_sigma = robot_ground_truth.move_probabilities["move_continuous"]['sigma']
 
         self.x_mu = self.A * self.x_mu + self.B * amount
-        self.sigma = np.sqrt(self.A**2 * self.sigma**2 + R_sensor_sigma**2)
+        self.sigma = self.A * self.sigma * (1/self.A) + R_movement_sigma
+        # not squared when using the matracies equations
 
         # x_mu = A @ x_mu + B * amount
         # self.x_mu = self.A @ self.x_mu + self.B * amount
