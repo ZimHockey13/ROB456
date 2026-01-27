@@ -28,6 +28,7 @@ class RobotGroundTruth:
     def __init__(self):
         # Where the robot actually is
         self.robot_loc = 0.5
+        self.robot_vel = 0.0
 
         # Default move probabilities, stored as dictionaries (see probabilities homework)
         #    move_left and move_right are discrete probabilities, with three cases - move left, move right, or hold still
