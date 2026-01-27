@@ -121,12 +121,18 @@ class RobotSensors:
 
         true_wall_dist = robot_gt.robot_loc
 
+        # I checked the outputs, this is correct!
+
         # from left wall:
         # print("np.random.normal called in query_distance_to_wall")
-        return np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
+        output = np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
+        # print(output)
+        return output
 
-        # from right wall:
-        # return np.random.normal(0, self.wall_probs["sigma"], size=None) + (1-true_wall_dist)
+        # x = np.array([robot_gt.robot_loc, robot_gt.robot_vel])
+        # C = np.array([1,0])
+        # err = np.random.normal(0, self.wall_probs["sigma"], size=None)
+        # return C @ x.transpose() + err
 
 
 def test_discrete_sensors(b_print=True):
