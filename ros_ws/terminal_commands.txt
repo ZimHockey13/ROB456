@@ -1,0 +1,15 @@
+
+# init ros2 in the terminal
+source /opt/ros/kilted/setup.bash
+
+# build the environment
+colcon build
+
+# example of running a program
+ros2 run lab0 circler
+
+# open Rviz2
+rviz2
+
+# open Rviz2 config file
+rviz2 -d src/lab3/config/driver.rviz
