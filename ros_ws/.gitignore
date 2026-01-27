@@ -1,0 +1,5 @@
+# ros workspace build stuff
+
+build/
+install/
+log/

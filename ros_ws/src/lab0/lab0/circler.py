@@ -49,7 +49,8 @@ class BasicCircler(Node):
 		p.header.frame_id = 'map'
 		p.point.x = cos(self.theta)
 		p.point.y = sin(self.theta)
-		p.point.z = 0.0
+		# p.point.z = 0
+		p.point.z = 0.125*cos(self.theta*4)
 
 		# Publish the point, just like we do in ROS.
 		self.pub.publish(p)
@@ -57,7 +58,7 @@ class BasicCircler(Node):
 		# Log that we published something.  In ROS2, loggers are associated with nodes, and
 		# the idiom is to use the get_logger() call to get the logger.  This has functions
 		# for each of the logging levels.
-		self.get_logger().info(f'Published point at ({p.point.x}, {p.point.y})')
+		self.get_logger().info(f'Published point at ({p.point.x}, {p.point.y}, {p.point.z})')
 
 		# Increment theta.  This will grow without bound, which is bad if we run
 		# the node for long enough, but we're not going to worry about it for this
