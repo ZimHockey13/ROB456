@@ -18,21 +18,30 @@ class KalmanFilter:
 
         # YOUR CODE HERE
 
-        # [position, velocity]
-        self.x_mu = np.array([0,0])
+        self.x_mu = 0
+        self.sigma = 0
 
-        # Covariance matrix: position error and velocity error
-        self.sigma = np.array([[0.4, 0],
-                               [0, 0.1]])
-        
-        # top right should be a t for time delta, but we assume 1 time step
-        self.A = np.array([[1, 0],
-                           [0, 1]])
-        
-        # t squared/2 and t
-        self.B = np.array([0.5, 0]).T
+        self.A = 1
+        self.B = 1
+        self.C = 1
 
-        self.C = np.array([1, 0])
+
+        # the following code couldv't been used if we wanted a 2D state [position, velocity]
+        # # [position, velocity]
+        # self.x_mu = np.array([0,0])
+
+        # # Covariance matrix: position error and velocity error
+        # self.sigma = np.array([[0.2, 0],
+        #                        [0, 0.1]])
+        
+        # # top right should be a t for time delta, but we assume 1 time step
+        # self.A = np.array([[1, 0],
+        #                    [0, 1]])
+        
+        # # t squared/2 and t
+        # self.B = np.array([1, 0]).T
+
+        # self.C = np.array([1, 0])
 
         self.reset_kalman()
 
@@ -42,7 +51,7 @@ class KalmanFilter:
         # GUIDE Return your stored mu value for the Gaussian
         # YOUR CODE HERE
 
-        return self.x_mu[0]
+        return self.x_mu
     
     def location_sigma(self):
         """ Return the sigma of the Gaussian
@@ -50,7 +59,7 @@ class KalmanFilter:
         # GUIDE Return your stored sigma value for the Gaussian
         # YOUR CODE HERE
 
-        return self.sigma[0][0]
+        return self.sigma
     
     # Put robot in the middle with a really broad standard deviation
     def reset_kalman(self, loc: float = 0.5, sigma: float = 0.4):
@@ -60,13 +69,19 @@ class KalmanFilter:
         # GUIDE: Reset the location to the middle of the unit interval with a big sigma
         # YOUR CODE HERE
 
-        self.x_mu[0] = loc
-        self.x_mu[1] = 0.0  # initial velocity
+        self.x_mu = loc
 
-        self.sigma[0][0] = sigma  # position variance
-        self.sigma[0][1] = 0.0
-        self.sigma[1][0] = 0.0
-        self.sigma[1][1] = sigma  # velocity variance
+        self.sigma = sigma
+
+
+        # 2D state [position, velocity]
+        # self.x_mu[0] = loc
+        # self.x_mu[1] = 0.0  # initial velocity
+
+        # self.sigma[0][0] = sigma  # position variance
+        # self.sigma[0][1] = 0.0
+        # self.sigma[1][0] = 0.0
+        # self.sigma[1][1] = sigma  # velocity variance
 
         # print(f"mean: {self.x_mu}, sigma: {self.sigma}")
 
@@ -81,15 +96,19 @@ class KalmanFilter:
         # GUIDE: Calculate C and K, then update the Gaussian
         # YOUR CODE HERE
 
-        # print(self.C @ self.sigma @ self.C.T)
+        K = self.sigma**2 / (self.sigma**2 + robot_sensors.wall_probs['sigma']**2)
+
+        # Update belief
+        self.x_mu = self.x_mu + K * (dist_reading - self.x_mu)
+        self.sigma = np.sqrt((1 - K) * self.sigma**2)
 
         # Kalman gain
         # K = self.sigma @ self.C.T @ np.linalg.inv(self.C @ self.sigma @ self.C.T + robot_sensors.wall_probs['sigma'])
-        K = self.sigma @ self.C.T * 1/(self.C @ self.sigma @ self.C.T + robot_sensors.wall_probs['sigma'])
+        # K = self.sigma @ self.C.T * 1/(self.C @ self.sigma @ self.C.T + robot_sensors.wall_probs['sigma'])
 
-        # Update belief
-        self.x_mu = self.x_mu + K * (dist_reading - self.C @ self.x_mu)
-        self.sigma = (np.eye(2) - K @ self.C) @ self.sigma
+        # # Update belief
+        # self.x_mu = self.x_mu + K * (dist_reading - self.C @ self.x_mu)
+        # self.sigma = (np.eye(2) - K @ self.C) @ self.sigma
 
     # Given a movement, update Gaussian
     def update_continuous_move(self, 
@@ -105,12 +124,14 @@ class KalmanFilter:
         # YOUR CODE HERE
 
         # Sensor noise
-        R_sensor_sigma = np.array([[robot_ground_truth.move_probabilities["move_continuous"]["sigma"],0],
-                                  [0,robot_ground_truth.move_probabilities["move_continuous"]["sigma"]]])
+        R_sensor_sigma = robot_ground_truth.move_probabilities["move_continuous"]['sigma']
+
+        self.x_mu = self.A * self.x_mu + self.B * amount
+        self.sigma = np.sqrt(self.A**2 * self.sigma**2 + R_sensor_sigma**2)
 
         # x_mu = A @ x_mu + B * amount
-        self.x_mu = self.A @ self.x_mu + self.B * amount
-        self.sigma = self.A @ self.sigma @ self.A.T + R_sensor_sigma
+        # self.x_mu = self.A @ self.x_mu + self.B * amount
+        # self.sigma = self.A @ self.sigma @ self.A.T + R_sensor_sigma
 
     def one_full_update(self, robot_ground_truth, robot_sensor, u: float, z: float):
         """This is the full update loop that takes in one action, followed by a sensor reading

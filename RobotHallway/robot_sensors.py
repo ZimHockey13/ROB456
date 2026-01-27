@@ -119,16 +119,16 @@ class RobotSensors:
         #  This is the Gaussian assignment from your probabilities homework
         # YOUR CODE HERE
 
-        # true_wall_dist = robot_gt.robot_loc
+        true_wall_dist = robot_gt.robot_loc
 
         # from left wall:
         # print("np.random.normal called in query_distance_to_wall")
-        # return np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
+        return np.random.normal(0, self.wall_probs["sigma"], size=None) + true_wall_dist
 
-        x = np.array([robot_gt.robot_loc, robot_gt.robot_vel])
-        C = np.array([1,0])
-        err = np.random.normal(0, self.wall_probs["sigma"], size=None)
-        return C @ x.transpose() + err
+        # x = np.array([robot_gt.robot_loc, robot_gt.robot_vel])
+        # C = np.array([1,0])
+        # err = np.random.normal(0, self.wall_probs["sigma"], size=None)
+        # return C @ x.transpose() + err
 
 
 def test_discrete_sensors(b_print=True):
