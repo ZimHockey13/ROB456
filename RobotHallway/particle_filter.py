@@ -124,6 +124,9 @@ class ParticleFilter:
 
             self.weights[i] *= robot_sensor.door_probs[true_state_key][sensor_key]
 
+        # this function works correctly
+        # dont change this function
+
 
 
     def calculate_weights_distance_wall(self, robot_sensors, dist_reading):
@@ -145,6 +148,7 @@ class ParticleFilter:
             return (1.0 / (sigma * np.sqrt(2 * np.pi))) * np.exp(- (x - mu) ** 2 / (2 * sigma ** 2))
 
         # YOUR CODE HERE
+        
 
 
     def resample_particles(self):
