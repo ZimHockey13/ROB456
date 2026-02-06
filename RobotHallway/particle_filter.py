@@ -124,6 +124,10 @@ class ParticleFilter:
 
             self.weights[i] *= robot_sensor.door_probs[true_state_key][sensor_key]
 
+        # normalize the weights
+        self.weights /= np.sum(self.weights)
+        assert np.isclose(np.sum(self.weights), 1.0), f"Error: Weights should be normalized, sum is {np.sum(self.weights)}"
+
         # this function works correctly
         # dont change this function
 
@@ -148,7 +152,17 @@ class ParticleFilter:
             return (1.0 / (sigma * np.sqrt(2 * np.pi))) * np.exp(- (x - mu) ** 2 / (2 * sigma ** 2))
 
         # YOUR CODE HERE
-        
+
+        sensor_sigma = robot_sensors.wall_probs["sigma"]
+
+        for i in range(len(self.particles)):
+            # which order? is the particle location x and the distance reading mean or visa versa?
+            # self.weights[i] *= gaussian(dist_reading, self.particles[i], sensor_sigma)
+            self.weights[i] *= gaussian(self.particles[i], dist_reading, sensor_sigma)
+
+        # normalize the weights
+        self.weights /= np.sum(self.weights)
+        assert np.isclose(np.sum(self.weights), 1.0), f"Error: Weights should be normalized, sum is {np.sum(self.weights)}"
 
 
     def resample_particles(self):
@@ -165,6 +179,18 @@ class ParticleFilter:
         #         Note that np.where can be used to substantially speed up finding which particle
         #   Part 3: Set the weights back to uniform (just to be neat and clean)
         # YOUR CODE HERE
+
+        running_sum = np.cumsum(self.weights)
+        # print(f"Running sum {running_sum}")
+        new_particles = []
+
+        for i in range(len(self.particles)):
+            zero_to_one = np.random.uniform()
+            particle_indx = np.where(running_sum >= zero_to_one)[0][0]
+            new_particles.append(self.particles[particle_indx])
+
+        self.particles = np.array(new_particles)
+        self.weights = np.ones(len(self.particles)) / len(self.particles)
 
     def one_full_update_door(self, world_ground_truth, robot_ground_truth, robot_sensor, u: float, z: bool):
         """This is the full update loop that takes in one action, followed by a door sensor reading
@@ -184,6 +210,10 @@ class ParticleFilter:
         #  Step 3 Resample/importance weight
         # YOUR CODE HERE
 
+        self.update_particles_move_continuous(robot_ground_truth, u)
+        self.calculate_weights_door_sensor_reading(world_ground_truth, robot_sensor, z)
+        self.resample_particles()
+
     def one_full_update_distance(self, robot_ground_truth, robot_sensor, u: float, z: float):
         """This is the full update loop that takes in one action, followed by a door sensor reading
         See Assignment slides for links to the lecture slides
@@ -200,6 +230,10 @@ class ParticleFilter:
         #  Step 2 Calculate the weights using the distance sensor return value
         #  Step 3 Resample/importance weight
         # YOUR CODE HERE
+
+        self.update_particles_move_continuous(robot_ground_truth, u)
+        self.calculate_weights_distance_wall(robot_sensor, z)
+        self.resample_particles()
 
     def plot_particles_with_weights(self, axs, world_ground_truth, robot_ground_truth):
         """Plot the particles (scaled by weights) and the doors and where the robot actually is
