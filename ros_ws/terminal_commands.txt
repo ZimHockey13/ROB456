@@ -1,4 +1,9 @@
 
+#if using Stage, make sure to open Ubuntu in Xorg from sign-in screen
+
+# enter into the ros_ws folder
+cd Desktop/CodingProjects/ROB456/ros_ws/
+
 # init ros2 in the terminal
 source /opt/ros/kilted/setup.bash
 
@@ -10,6 +15,9 @@ source install/local_setup.bash
 
 # example of running a program
 ros2 run lab0 circler
+
+# example of launching Stage
+ros2 launch rob_stage rob_stage.launch.py world:=simple
 
 # open Rviz2
 rviz2
