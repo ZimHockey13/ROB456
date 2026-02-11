@@ -2,8 +2,11 @@
 # init ros2 in the terminal
 source /opt/ros/kilted/setup.bash
 
-# build the environment
+# build the environment (do this in the ros_ws folder)
 colcon build
+
+# setup your code to run for this session
+source install/local_setup.bash
 
 # example of running a program
 ros2 run lab0 circler
