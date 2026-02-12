@@ -56,7 +56,7 @@ def convert_scan_to_xy(scan: LaserScan):
     return xs, ys
 
 
-def label_scan(scan: LaserScan, robot_width = .38):
+def label_scan(scan: LaserScan, robot_width = 0.38):
     """ Label each scan end-point with where it is wrt the robot
     @param scan - the laser scan class above (similar to the real laser scan in ROS)
     @param robot_width = the width of the robot in m (reminder that scans are in cm)
@@ -156,6 +156,35 @@ def get_twist_values(scan: LaserScan, robot_width = 0.38, stopping_distance = 1.
     #.  Output: tanh always outputs a value between -1 and 1. You need to scale the output so that
     #.   when tanh returns 1, you are going at the maximum allowable speed
     #. Since it's also hard to get exactly to zero, if the robot is "close" to the correct distance, just stop
+
+    angle_min = scan.angle_min
+    angle_max = scan.angle_max
+    num_readings = len(scan.ranges)
+
+    # GUIDE
+    # Use angle min, max, and number of readings to calculate the theta value for each scan
+    # This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
+    # YOUR CODE HERE
+
+    def is_in_front(angle, dist, bot_width):
+        width_from_center = np.abs(dist*np.sin(angle))
+        if (width_from_center < bot_width/2):
+            return True
+        return False
+
+    frontal_dists = []
+    frontal_angs = []
+    angle_delta = (angle_max-angle_min)/num_readings
+
+    my_bot_width = 0.38
+
+
+    for i in range(num_readings):
+        i_angle = angle_min+i*angle_delta
+        i_dist = scan.ranges[i]
+        if is_in_front(i_angle, i_dist, my_bot_width):
+            frontal_dists.append(i_dist)
+            frontal_angs.append(i_angle)
 
     # Return max_speed
     shortest = 0
