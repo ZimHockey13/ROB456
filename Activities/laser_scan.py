@@ -53,6 +53,19 @@ def convert_scan_to_xy(scan: LaserScan):
     # GUIDE
     #. convert range scan to x,y location
     # YOUR CODE HERE
+    angle_min = scan.angle_min
+    angle_max = scan.angle_max
+    num_readings = len(scan.ranges)
+
+    for i in range(num_readings):
+        angle = angle_min + i*(angle_max-angle_min)/num_readings
+        dist = scan.ranges[i]
+        x = dist * np.cos(angle)
+        y = dist * np.sin(angle)
+        xs.append(x)
+        ys.append(y)
+
+
     return xs, ys
 
 
@@ -67,6 +80,22 @@ def label_scan(scan: LaserScan, robot_width = 0.38):
     # Set all labels that are to the left of the robot with "Left", etc
     labels = ["Front"] * len(scan.ranges)
     # YOUR CODE HERE
+
+    angle_delta = (scan.angle_max-scan.angle_min)/len(scan.ranges)
+
+    for i in range(len(scan.ranges)):
+        angle = scan.angle_min + i*angle_delta
+        dist = scan.ranges[i]
+
+        width_from_center = np.abs(dist*np.sin(angle))
+        if (width_from_center < robot_width/2):
+            labels[i] = "Front"
+        else:
+            if angle > 0:
+                labels[i] = "Right"
+            else:
+                labels[i] = "Left"
+
     return labels
 
 
@@ -176,7 +205,7 @@ def get_twist_values(scan: LaserScan, robot_width = 0.38, stopping_distance = 1.
     frontal_angs = []
     angle_delta = (angle_max-angle_min)/num_readings
 
-    my_bot_width = 0.38
+    my_bot_width = robot_width
 
 
     for i in range(num_readings):
@@ -187,8 +216,16 @@ def get_twist_values(scan: LaserScan, robot_width = 0.38, stopping_distance = 1.
             frontal_angs.append(i_angle)
 
     # Return max_speed
-    shortest = 0
-    max_speed = 0.2
+    # shortest = 0
+    # max_speed = 0.2
+
+    shortest = np.min(frontal_dists)
+    # max_speed = 0.35
+    # target_dist = 1
+    # YOUR CODE HERE
+
+    drive_speed = max_speed*np.tanh(shortest-stopping_distance)
+    linear_x = drive_speed
 
     # You can use convert_scan_to_xy here if you want
     # YOUR CODE HERE
