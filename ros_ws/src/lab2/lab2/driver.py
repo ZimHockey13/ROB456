@@ -103,8 +103,8 @@ class Lab3Driver(Node):
 		# GUIDE: Declare any variables here
   # YOUR CODE HERE
 
-		self.ang_to_goal = None
-		self.dist_to_goal = None
+		self.ang_to_goal = 0.0
+		self.dist_to_goal = 0.0
 
 
 		# Timer to make sure we publish the target marker (once we get a goal)
@@ -351,6 +351,44 @@ class Lab3Driver(Node):
 		# GUIDE: Use this method to collect obstacle information - is something in front of, to the left, or to 
 		# the right of the robot? Start with your stopper code from Lab1
   # YOUR CODE HERE
+		angle_min = scan.angle_min
+		angle_max = scan.angle_max
+		num_readings = len(scan.ranges)
+		range_max = scan.range_max
+
+		# if all scan ranges are max range, the scan sees nothing
+		if np.isclose(np.min(scan.ranges),range_max):
+			self.get_logger().info("nothing detected by scan EZ")
+			return False, 0.0, 0.0
+
+		# # def is_in_front(angle, dist, bot_width):
+		# # 	width_from_center = np.abs(dist*np.sin(angle))
+		# # 	if (width_from_center < bot_width/2):
+		# # 		return True
+		# # 	return False
+
+		# # frontal_dists = []
+		# # frontal_angs = []
+		# right_dists = []
+		# left_dists = []
+		# angle_delta = (angle_max-angle_min)/num_readings
+
+		# # not sure if we care about it being directly in front
+		# # my_bot_width = 0.38
+
+
+		# for i in range(num_readings):
+		# 	i_angle = angle_min+i*angle_delta
+		# 	i_dist = scan.ranges[i]
+		# 	# if is_in_front(i_angle, i_dist, my_bot_width):
+		# 	# 	frontal_dists.append(i_dist)
+		# 	# 	frontal_angs.append(i_angle)
+		# 	if i_angle > 0:
+		# 		right_dists.append(i_dist)
+		# 	else:
+		# 		left_dists.append(i_dist)
+
+
 		return False, 0.0, 0.0
 
 	def get_twist(self, scan):
@@ -370,14 +408,27 @@ class Lab3Driver(Node):
 		#  Note: If the target is behind you, might turn first before moving
 		#  Note: 0.4 is a good speed if nothing is in front of the robot
 
-		min_speed = 0.05
-		max_speed = 0.2         # This moves about 0.01 m between scans
+		min_speed = 0.015
+		max_speed = 0.4         # This moves about 0.01 m between scans
 		max_turn = np.pi * 0.1  # This turns about 2 degrees between scans
 
   # YOUR CODE HERE
 
-		# t.twist.linear.x = max_speed
-		# t.twist.angular.z = 0.0
+		ang_to_goal = self.ang_to_goal
+		dist_to_goal = self.dist_to_goal
+
+
+		if abs(ang_to_goal) > pi/4:
+			t.twist.linear.x = float(0.0)
+		else:
+			t.twist.linear.x = max_speed*np.tanh(dist_to_goal)
+			if t.twist.linear.x < min_speed:
+				t.twist.linear.x = min_speed
+				self.get_logger().info("using min speed")
+
+
+		t.twist.angular.z = max_turn*np.tanh(pi*ang_to_goal)
+
 		if self.print_twist_messages:
 			self.get_logger().info(f"Setting twist forward {t.twist.linear.x} angle {t.twist.angular.z}")
 		return t			
