@@ -24,3 +24,14 @@ rviz2
 
 # open Rviz2 config file
 rviz2 -d src/lab3/config/driver.rviz
+
+
+# lab2
+ros2 launch lab2 lab2.launch.py world:=empty
+
+or
+
+ros2 launch rob_stage rob_stage.launch.py world:=empty
+ros2 run lab2 send_points
+ros2 run lab2 driver
+
