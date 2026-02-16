@@ -103,6 +103,10 @@ class Lab3Driver(Node):
 		# GUIDE: Declare any variables here
   # YOUR CODE HERE
 
+		self.ang_to_goal = None
+		self.dist_to_goal = None
+
+
 		# Timer to make sure we publish the target marker (once we get a goal)
 		self.marker_timer = self.create_timer(1.0, self._marker_callback)
 
@@ -171,6 +175,7 @@ class Lab3Driver(Node):
 
 		# Timer to make sure we publish the new target
 		self.marker_timer.reset()
+		# this essentially calls the _marker_callback() function because it only runs when this timmer is triggerd
 
 		# Accept all goals. You can use this (in the future) to NOT accept a goal if you want
 		return GoalResponse.ACCEPT
@@ -196,7 +201,11 @@ class Lab3Driver(Node):
 		@ return true/false """
 
   # YOUR CODE HERE
-		return False
+
+		if self.distance_to_target() < self.threshold:
+			return True
+		else:
+			return False
 
 	def distance_to_target(self):
 		""" Communicate with send points - set to distance to target"""
@@ -230,6 +239,8 @@ class Lab3Driver(Node):
 				self.get_logger().info(f"Goal was canceled")
 
 				return result
+			
+			self.get_logger().info("loop testing... EZ")
 			
 			feedback = NavTarget.Feedback()
 			feedback.distance.data = self.distance_to_target()
@@ -298,6 +309,9 @@ class Lab3Driver(Node):
 		# GUIDE: Calculate any additional variables here
 		#  Remember that the target's location is in its own coordinate frame at 0,0, angle 0 (x-axis)
   # YOUR CODE HERE
+
+		self.ang_to_goal = atan2(self.target.point.y, self.target.point.x)
+		self.dist_to_goal = self.distance_to_target()
 
 		return self.target
 
