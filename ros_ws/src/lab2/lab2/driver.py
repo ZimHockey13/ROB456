@@ -48,7 +48,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 
 class Lab3Driver(Node):
-	def __init__(self, threshold=0.2):
+	def __init__(self, threshold=0.3):
 		""" We have parameters this time
 		@param threshold - how close do you have to be before saying you're at the goal? Set to width of robot
 		"""
@@ -404,11 +404,11 @@ class Lab3Driver(Node):
 			
 			elif abs(mangle) < pi/3:
 				# drive past the side of the obstacle
-				return True, 0.35, 0.0
+				return True, 0.6, 0.0
 			
 			else:
 				# if the angle to the obstacle is greater than 60 degrees, turn a little back towards the goal
-				return True, 0.35, np.tanh(ang_to_goal)
+				return True, 0.75, np.tanh(pi*ang_to_goal)
 		
 		return False, 0.0, 0.0
 
@@ -471,7 +471,7 @@ def main(args=None):
 
 	# Make a node class.  The idiom in ROS2 is to encapsulte everything in a class
 	# that derives from Node.
-	driver = Lab3Driver()
+	driver = Lab3Driver(threshold=0.5)
 
 	# Multi-threaded execution
 	executor = MultiThreadedExecutor()
