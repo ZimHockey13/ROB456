@@ -379,26 +379,36 @@ class Lab3Driver(Node):
 		my_bot_width = 0.4
 
 		# if we are facing the obstacle, back up (we already know the goal isn't between the bot and the obstacle)
-		if is_in_front(mangle, min_reading, my_bot_width*1.3) and min_reading < range_max/6:
-			return True, -0.6, 0.0
+		if is_in_front(mangle, min_reading, my_bot_width*1.3) and min_reading < range_max/8:
+			return True, -0.55, 0.0
 		
 		# scale the speed based on distance to the obstacle
 		# trans = min_reading/(range_max/4)
-		trans = 0.8
+		trans = 0.0
 		rot = 1.0			
 
 		# turn out of the way if the obstacle is in a location worth avoiding (in front and close)
-		if is_in_front(mangle, min_reading, my_bot_width*1.5) and min_reading < range_max/4:
-		
 
-			if mangle > 0 and mangle:
-				# object on right
-				rot *= -0.8
+		if min_reading < range_max/5.5:
+			if is_in_front(mangle, min_reading, my_bot_width*1.5):
+			
+
+				if mangle > 0 and mangle:
+					# object in front right, turn left
+					rot *= -0.8
+				else:
+					# object in front left, turn right
+					rot *= 0.8
+
+				return True, trans, rot
+			
+			elif abs(mangle) < pi/3:
+				# drive past the side of the obstacle
+				return True, 0.35, 0.0
+			
 			else:
-				# object on left
-				rot *= 0.8
-
-			return True, trans, rot
+				# if the angle to the obstacle is greater than 60 degrees, turn a little back towards the goal
+				return True, 0.35, np.tanh(ang_to_goal)
 		
 		return False, 0.0, 0.0
 
