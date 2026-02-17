@@ -240,7 +240,7 @@ class Lab3Driver(Node):
 
 				return result
 			
-			self.get_logger().info("loop testing... EZ")
+			# self.get_logger().info("loop testing... EZ")
 			
 			feedback = NavTarget.Feedback()
 			feedback.distance.data = self.distance_to_target()
@@ -340,7 +340,7 @@ class Lab3Driver(Node):
 		# Publish the new twist
 		self.cmd_pub.publish(t)
 
-	def get_obstacle(self, scan):
+	def get_obstacle(self, scan, ang_to_goal, dist_to_goal):
 		""" check if an obstacle
 		@param scan - the lidar scan
 		@return Currently True/False and speed, angular turn"""
@@ -355,40 +355,51 @@ class Lab3Driver(Node):
 		angle_max = scan.angle_max
 		num_readings = len(scan.ranges)
 		range_max = scan.range_max
+		angle_delta = (angle_max-angle_min)/num_readings
 
 		# if all scan ranges are max range, the scan sees nothing
 		if np.isclose(np.min(scan.ranges),range_max):
-			self.get_logger().info("nothing detected by scan EZ")
+			# self.get_logger().info("nothing detected by scan EZ")
 			return False, 0.0, 0.0
+		
+		min_reading = np.min(scan.ranges)
+		# if I can go straight to the goal, do it
+		if dist_to_goal < min_reading:
+			return False, 0.0, 0.0
+		
+		# check if the obstacle is in front of the robot or not
+		def is_in_front(angle, dist, bot_width):
+			width_from_center = np.abs(dist*np.sin(angle))
+			if (width_from_center < bot_width/2):
+				return True
+			return False
+		
+		mindex = np.where(np.isclose(scan.ranges, min_reading))[0][0]
+		mangle = angle_min+(mindex*angle_delta)
+		my_bot_width = 0.4
 
-		# # def is_in_front(angle, dist, bot_width):
-		# # 	width_from_center = np.abs(dist*np.sin(angle))
-		# # 	if (width_from_center < bot_width/2):
-		# # 		return True
-		# # 	return False
+		# if we are facing the obstacle, back up (we already know the goal isn't between the bot and the obstacle)
+		if is_in_front(mangle, min_reading, my_bot_width*1.3) and min_reading < range_max/6:
+			return True, -0.6, 0.0
+		
+		# scale the speed based on distance to the obstacle
+		# trans = min_reading/(range_max/4)
+		trans = 0.8
+		rot = 1.0			
 
-		# # frontal_dists = []
-		# # frontal_angs = []
-		# right_dists = []
-		# left_dists = []
-		# angle_delta = (angle_max-angle_min)/num_readings
+		# turn out of the way if the obstacle is in a location worth avoiding (in front and close)
+		if is_in_front(mangle, min_reading, my_bot_width*1.5) and min_reading < range_max/4:
+		
 
-		# # not sure if we care about it being directly in front
-		# # my_bot_width = 0.38
+			if mangle > 0 and mangle:
+				# object on right
+				rot *= -0.8
+			else:
+				# object on left
+				rot *= 0.8
 
-
-		# for i in range(num_readings):
-		# 	i_angle = angle_min+i*angle_delta
-		# 	i_dist = scan.ranges[i]
-		# 	# if is_in_front(i_angle, i_dist, my_bot_width):
-		# 	# 	frontal_dists.append(i_dist)
-		# 	# 	frontal_angs.append(i_angle)
-		# 	if i_angle > 0:
-		# 		right_dists.append(i_dist)
-		# 	else:
-		# 		left_dists.append(i_dist)
-
-
+			return True, trans, rot
+		
 		return False, 0.0, 0.0
 
 	def get_twist(self, scan):
@@ -418,16 +429,22 @@ class Lab3Driver(Node):
 		dist_to_goal = self.dist_to_goal
 
 
-		if abs(ang_to_goal) > pi/4:
-			t.twist.linear.x = float(0.0)
+		obstacle_found, trans, rot = self.get_obstacle(scan, ang_to_goal, dist_to_goal)
+
+		if obstacle_found:
+			t.twist.linear.x = trans*max_speed
+			t.twist.angular.z = rot*max_turn
+
 		else:
-			t.twist.linear.x = max_speed*np.tanh(dist_to_goal)
-			if t.twist.linear.x < min_speed:
-				t.twist.linear.x = min_speed
-				self.get_logger().info("using min speed")
+			if abs(ang_to_goal) > pi/4:
+				t.twist.linear.x = float(0.0)
+			else:
+				t.twist.linear.x = max_speed*np.tanh(dist_to_goal)
+				if t.twist.linear.x < min_speed:
+					t.twist.linear.x = min_speed
+					self.get_logger().info("using min speed")
+			t.twist.angular.z = max_turn*np.tanh(pi*ang_to_goal)
 
-
-		t.twist.angular.z = max_turn*np.tanh(pi*ang_to_goal)
 
 		if self.print_twist_messages:
 			self.get_logger().info(f"Setting twist forward {t.twist.linear.x} angle {t.twist.angular.z}")
