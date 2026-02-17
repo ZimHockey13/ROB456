@@ -388,8 +388,7 @@ class Lab3Driver(Node):
 		rot = 1.0			
 
 		# turn out of the way if the obstacle is in a location worth avoiding (in front and close)
-
-		if min_reading < range_max/5.5:
+		if min_reading < range_max/5.5 and abs(mangle-ang_to_goal) < pi/6:
 			if is_in_front(mangle, min_reading, my_bot_width*1.5):
 			
 
@@ -404,11 +403,11 @@ class Lab3Driver(Node):
 			
 			elif abs(mangle) < pi/3:
 				# drive past the side of the obstacle
-				return True, 0.6, 0.0
+				return True, 0.5, 0.0
 			
 			else:
 				# if the angle to the obstacle is greater than 60 degrees, turn a little back towards the goal
-				return True, 0.75, np.tanh(pi*ang_to_goal)
+				return True, 0.35, np.tanh(pi*ang_to_goal)
 		
 		return False, 0.0, 0.0
 
@@ -471,7 +470,7 @@ def main(args=None):
 
 	# Make a node class.  The idiom in ROS2 is to encapsulte everything in a class
 	# that derives from Node.
-	driver = Lab3Driver(threshold=0.5)
+	driver = Lab3Driver(threshold=0.725)
 
 	# Multi-threaded execution
 	executor = MultiThreadedExecutor()
