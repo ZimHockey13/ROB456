@@ -59,6 +59,26 @@ class MyStopper(Node):
 		# This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
   # YOUR CODE HERE
 
+		def is_in_front(angle, dist, bot_width):
+			width_from_center = np.abs(dist*np.sin(angle))
+			if (width_from_center < bot_width/2):
+				return True
+			return False
+
+		frontal_dists = []
+		frontal_angs = []
+		angle_delta = (angle_max-angle_min)/num_readings
+
+		my_bot_width = 0.38
+
+
+		for i in range(num_readings):
+			i_angle = angle_min+i*angle_delta
+			i_dist = scan.ranges[i]
+			if is_in_front(i_angle, i_dist, my_bot_width):
+				frontal_dists.append(i_dist)
+				frontal_angs.append(i_angle)
+
 		# GUIDE: Determine what the closest obstacle/reading is for scans in front of the robot
 		#  Step 1: Determine which of the range readings correspond to being "in front of" the robot (see comment at top)
 		#    Remember that robot scans are in the robot's coordinate system - theta = 0 means straight ahead
@@ -82,16 +102,20 @@ class MyStopper(Node):
 		t.twist.angular.y = 0.0
 		t.twist.angular.z = 0.0
 
-		shortest = 0
-		max_speed = 0.2
+		shortest = np.min(frontal_dists)
+		max_speed = 0.35
+		target_dist = 1
   # YOUR CODE HERE
+
+		drive_speed = max_speed*np.tanh(shortest-target_dist)
+		t.twist.linear.x = drive_speed
 
 		# Send the command to the robot.
 		self.pub.publish(t)
 
 		# Print out a log message to the INFO channel to let us know it's working.
 		self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
-
+		# self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}, center_reading {scan.ranges[int(len(scan.ranges)/2)]}, frontal_min {np.min(frontal_dists)}, frontal_max {np.max(frontal_dists)}, min_fang {np.min(frontal_angs)}, max_fang {np.max(frontal_angs)}')
 
 
 # The idiom in ROS2 is to use a function to do all of the setup and work.  This
