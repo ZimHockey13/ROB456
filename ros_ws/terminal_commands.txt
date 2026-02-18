@@ -26,12 +26,15 @@ rviz2
 rviz2 -d src/lab3/config/driver.rviz
 
 
-# lab2
-ros2 launch lab2 lab2.launch.py world:=empty
+# lab2 with obstacle world and rviz
+ros2 launch lab2 lab2.launch.py world:=obstacle launch_rviz:=true
 
-or
+# lab2 Extra Credit launch with simple world and rviz
+ros2 launch lab2 lab2.launch.py world:=simple launch_rviz:=true
 
-ros2 launch rob_stage rob_stage.launch.py world:=empty
+# or individually
+
+ros2 launch rob_stage rob_stage.launch.py world:=obstacle
 ros2 run lab2 send_points
 ros2 run lab2 driver
 
