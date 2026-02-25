@@ -2,39 +2,51 @@
 #if using Stage, make sure to open Ubuntu in Xorg from sign-in screen
 
 # enter into the ros_ws folder
-cd Desktop/CodingProjects/ROB456/ros_ws/
+    cd Desktop/CodingProjects/ROB456/ros_ws/
 
 # init ros2 in the terminal
-source /opt/ros/kilted/setup.bash
+    source /opt/ros/kilted/setup.bash
 
 # build the environment (do this in the ros_ws folder)
-colcon build
+    colcon build
 
 # setup your code to run for this session
-source install/local_setup.bash
+    source install/local_setup.bash
 
+
+# ----------------------------------------------------- lab 0 -----------------------------------------------------
 # example of running a program
-ros2 run lab0 circler
+    ros2 run lab0 circler
 
+
+# ----------------------------------------------------- lab 1 -----------------------------------------------------
 # example of launching Stage
-ros2 launch rob_stage rob_stage.launch.py world:=simple
+    ros2 launch rob_stage rob_stage.launch.py world:=simple
 
 # open Rviz2
-rviz2
-
-# open Rviz2 config file
-rviz2 -d src/lab3/config/driver.rviz
+    rviz2
 
 
+# ----------------------------------------------------- lab 2 -----------------------------------------------------
 # lab2 with obstacle world and rviz
-ros2 launch lab2 lab2.launch.py world:=obstacle launch_rviz:=true
+    ros2 launch lab2 lab2.launch.py world:=obstacle launch_rviz:=true
 
 # lab2 Extra Credit launch with simple world and rviz
-ros2 launch lab2 lab2.launch.py world:=simple launch_rviz:=true
+    ros2 launch lab2 lab2.launch.py world:=simple launch_rviz:=true
 
 # or individually
+    ros2 launch rob_stage rob_stage.launch.py world:=obstacle
+    ros2 run lab2 send_points
+    ros2 run lab2 driver
 
-ros2 launch rob_stage rob_stage.launch.py world:=obstacle
-ros2 run lab2 send_points
-ros2 run lab2 driver
+
+# ----------------------------------------------------- lab 3 -----------------------------------------------------
+# open Rviz2 config file
+    rviz2 -d src/lab3/config/driver.rviz
+
+# run the lab 3 launch file
+    ros2 launch lab3 lab3.launch.py world:=simple launch_rviz:=true
+
+# individual terminal commands to run each of the nodes
+    
 
