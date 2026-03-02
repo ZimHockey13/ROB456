@@ -109,6 +109,9 @@ def convert_image(im, wall_threshold, free_threshold):
     im_ret[im_avg > free_threshold] = 255
     return im_ret
 
+def get_dist(initial, final):
+    return np.sqrt((final[0]-initial[0])**2+(final[1]-initial[1])**2)
+
 
 # -------------- Getting 4 or 8 neighbors ---------------
 def four_connected(pix=(0, 0)):
@@ -194,6 +197,32 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #    Now do the instructions from the slide (the actual algorithm)
         #  See also lecture slides
         # YOUR CODE HERE
+
+        # step 1 break if at goal
+        if current_node_ij == goal_loc: break
+
+        # step 2 if the node is closed, compare to the previous
+        if visited_closed_yn:
+            continue
+        else:
+            visited[current_node_ij] = (visited_distance, visited_parent, True)
+
+
+        for point in eight_connected(current_node_ij):
+            dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
+
+            if 0 <= point[0] < im.shape[1] and 0 <= point[1] < im.shape[0]:
+                pass
+            else:
+                raise Exception("point coords not in image")
+            
+        
+
+
+
+
+
+
 
     # Now check that we actually found the goal node
     if not goal_loc in visited:
