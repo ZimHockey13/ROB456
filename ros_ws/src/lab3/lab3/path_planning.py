@@ -165,12 +165,12 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
     #   push takes the queue itself, then a tuple with the first element the priority value and the second
     #   being whatever data you want to keep - in this case, the robot location, which is a tuple
 
-    # Dijkstra
+    # Dijkstra (the zero is the cost to start at the origin, all future costs will be summed on top of this)
     heapq.heappush(priority_queue, (0, robot_loc))
     
     # A*
-    goal_dist = get_dist(robot_loc, goal_loc)
-    heapq.heappush(priority_queue, (0, robot_loc))
+    # goal_dist = get_dist(robot_loc, goal_loc)
+    # heapq.heappush(priority_queue, (goal_dist, robot_loc))
 
 
     # The power of dictionaries - we're going to use a dictionary to store every node we've visited, along
@@ -226,12 +226,23 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             if not is_free(point):
                 continue
 
-            dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
-
+            # validating that the point is at a legal location
             if 0 <= point[0] < im.shape[1] and 0 <= point[1] < im.shape[0]:
                 pass
             else:
                 raise Exception("point coords not in image")
+            
+            # Dijkstra Scoring:
+            tot_dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
+            point_cost = tot_dist_to_point
+
+            # A* Scoring
+            point_cost = get_dist(point, goal_loc)
+
+            # Check if an entry in visited already exists for the nearby point
+            if point not in visited:
+                visited[point] = (point_cost, current_node_ij, False)
+                
             
 
             
