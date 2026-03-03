@@ -164,7 +164,14 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
     # Push the start node onto the queue
     #   push takes the queue itself, then a tuple with the first element the priority value and the second
     #   being whatever data you want to keep - in this case, the robot location, which is a tuple
+
+    # Dijkstra
     heapq.heappush(priority_queue, (0, robot_loc))
+    
+    # A*
+    goal_dist = get_dist(robot_loc, goal_loc)
+    heapq.heappush(priority_queue, (0, robot_loc))
+
 
     # The power of dictionaries - we're going to use a dictionary to store every node we've visited, along
     #   with the node we came from and the current distance
@@ -181,6 +188,8 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         # Get the current best node off of the list (pop the node off the queue)
         current_node = heapq.heappop(priority_queue)
         # Pop returns the value and the i, j
+
+        # This is the total cost to this location
         distance_to_current_node = current_node[0]
         current_node_ij = current_node[1]  # i,j index of current node
 
@@ -198,6 +207,10 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #  See also lecture slides
         # YOUR CODE HERE
 
+        # NOTES: Closed means "physically" been to on the path
+        # visited means that the point has been looked at during the plannig process but not neccicarily chosen for the path
+        # distance to current node and visited distance are the total cost required to get to that point from the origin
+
         # step 1 break if at goal
         if current_node_ij == goal_loc: break
 
@@ -209,12 +222,18 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
 
 
         for point in eight_connected(current_node_ij):
+
+            if not is_free(point):
+                continue
+
             dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
 
             if 0 <= point[0] < im.shape[1] and 0 <= point[1] < im.shape[0]:
                 pass
             else:
                 raise Exception("point coords not in image")
+            
+
             
         
 
