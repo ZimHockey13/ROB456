@@ -274,7 +274,11 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
 
 
-    # Now check that we actually found the goal node
+    # GUIDE: Build the path by starting at the goal node and working backwards
+    # YOUR CODE HERE
+    path = []
+
+    # Now check that we actually found the goal node (if not, choose the nearest to the goal)
     if not goal_loc in visited:
         print(f"Goal {goal_loc} not reached, taking closest")
 
@@ -283,7 +287,8 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
 
-        header = (0,0)
+        # this is a filler touple, should be overritten. I don't want to see this later
+        first_parent = (-1,-1)
 
         if method == "Dijkstra":
 
@@ -300,44 +305,34 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
             mindex = np.where(visited_costs = minimum_cost)[0][0]
 
             # get the key of the minimum cost
-            header = visited_keys[mindex]
+            first_parent = visited_keys[mindex]
 
             print(f"min cost: {minimum_cost}")
-            print(F"found: {header}, {visited[header]}")
+            print(F"found: {first_parent}, {visited[first_parent]}")
 
         else:
             raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
         
-        path = []
-        path.append(goal_loc)
-        # GUIDE: Build the path by starting at the goal node and working backwards
-        # YOUR CODE HERE
+        path.append(first_parent)
+        
 
-        return path
+    else: path.append(goal_loc)
 
-    
-    else:
+    print("entering path generating while loop")
+    full_path_flag = False
+    while not full_path_flag:
 
-        # GUIDE: Build the path by starting at the goal node and working backwards
-        # YOUR CODE HERE
-        path = []
-        path.append(goal_loc)
+        parent = visited[path[-1]][1]
 
-        print("entering path generating while loop")
-        full_path_flag = False
-        while not full_path_flag:
+        if parent == None:
+            full_path_flag = True
+            continue
 
-            parent = visited[path[-1]][1]
+        path.append(parent)
 
-            if parent == None:
-                full_path_flag = True
-                continue
+    print(f"found path: end point = {path[0]}")
 
-            path.append(parent)
-
-        print(f"found path: end point = {path[0]}")
-
-        return path
+    return path
 
 
 def open_image(im_name):
