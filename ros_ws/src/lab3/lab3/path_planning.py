@@ -139,7 +139,7 @@ def eight_connected(pix=(0, 0)):
             yield ret
 
 
-def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
+def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
     """ Occupancy grid image, with robot and goal loc as pixels
     @param im - the thresholded image - use is_free(i, j) to determine if in reachable node
     @param robot_loc - where the robot is (i,j)
@@ -165,12 +165,21 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
     #   push takes the queue itself, then a tuple with the first element the priority value and the second
     #   being whatever data you want to keep - in this case, the robot location, which is a tuple
 
+    # NOTE the cost assosiated with Dijkstra is the total distance traveled to get to the point 
+    # while the cost assosiated with A* is the distance left to the goal 
+    # both should be minimized but A* can be used to measure progress to the goal
+
     # Dijkstra (the zero is the cost to start at the origin, all future costs will be summed on top of this)
-    heapq.heappush(priority_queue, (0, robot_loc))
+    if method == "Dijkstra":
+        heapq.heappush(priority_queue, (0, robot_loc))
     
     # A*
-    # goal_dist = get_dist(robot_loc, goal_loc)
-    # heapq.heappush(priority_queue, (goal_dist, robot_loc))
+    elif method == "A*":
+        goal_dist = get_dist(robot_loc, goal_loc)
+        heapq.heappush(priority_queue, (goal_dist, robot_loc))
+
+    else:
+        raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
 
 
     # The power of dictionaries - we're going to use a dictionary to store every node we've visited, along
@@ -184,6 +193,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
 
     # While the list is not empty 
     # Use a break statement to end the while loop if you encounter the goal node before the queue empties
+    print("entering priority queue while loop")
     while priority_queue:
         # Get the current best node off of the list (pop the node off the queue)
         current_node = heapq.heappop(priority_queue)
@@ -207,7 +217,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #  See also lecture slides
         # YOUR CODE HERE
 
-        # NOTES: Closed means "physically" been to on the path
+        # NOTE: Closed means "physically" been to on the path
         # visited means that the point has been looked at during the plannig process but not neccicarily chosen for the path
         # distance to current node and visited distance are the total cost required to get to that point from the origin
 
@@ -232,25 +242,35 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             else:
                 raise Exception("point coords not in image")
             
+
+
             # Dijkstra Scoring:
-            tot_dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
-            point_cost = tot_dist_to_point
+            if method == "Dijkstra":
+                tot_dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
+                point_cost = tot_dist_to_point
 
             # A* Scoring
-            point_cost = get_dist(point, goal_loc)
+            elif method == "A*":
+                point_cost = get_dist(point, goal_loc)
+
+            else:
+                raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
 
             # Check if an entry in visited already exists for the nearby point
             if point not in visited:
+
+                # if not, create an entry for the new point in the visited dictionary
                 visited[point] = (point_cost, current_node_ij, False)
-                
-            
+
+            # check if the current path's cost to this new point is less than the previously visited costs
+            elif point_cost < visited[point][0]:
+
+                # reassign with the new lower cost
+                visited[point] = (point_cost, current_node_ij, False)
 
             
-        
-
-
-
-
+            # Finally, push the new point onto the queue with its cost
+            heapq.heappush(priority_queue,(point_cost,point))
 
 
 
@@ -263,12 +283,61 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
 
-    path = []
-    path.append(goal_loc)
-    # GUIDE: Build the path by starting at the goal node and working backwards
-    # YOUR CODE HERE
+        header = (0,0)
 
-    return path
+        if method == "Dijkstra":
+
+            print("finding the closest end point not implemented yet for Dijkstra method")
+
+        elif method == "A*":
+
+            # strip visited into keys which are the point locations and costs
+            visited_keys = list(visited.keys())
+            visited_costs = np.array(visited.values())[:,0]
+
+            # find location of the minimum cost (shortest distance to the goal)
+            minimum_cost = np.min(visited_costs)
+            mindex = np.where(visited_costs = minimum_cost)[0][0]
+
+            # get the key of the minimum cost
+            header = visited_keys[mindex]
+
+            print(f"min cost: {minimum_cost}")
+            print(F"found: {header}, {visited[header]}")
+
+        else:
+            raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
+        
+        path = []
+        path.append(goal_loc)
+        # GUIDE: Build the path by starting at the goal node and working backwards
+        # YOUR CODE HERE
+
+        return path
+
+    
+    else:
+
+        # GUIDE: Build the path by starting at the goal node and working backwards
+        # YOUR CODE HERE
+        path = []
+        path.append(goal_loc)
+
+        print("entering path generating while loop")
+        full_path_flag = False
+        while not full_path_flag:
+
+            parent = visited[path[-1]][1]
+
+            if parent == None:
+                full_path_flag = True
+                continue
+
+            path.append(parent)
+
+        print(f"found path: end point = {path[0]}")
+
+        return path
 
 
 def open_image(im_name):
