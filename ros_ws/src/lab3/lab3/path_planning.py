@@ -86,6 +86,23 @@ def is_free(im, pix=(0,0)):
         return True
     return False
 
+def is_reachable(im, pix):
+    """ Is the pixel reachable, i.e., has a neighbor that is free?
+    Used for
+    @param im - the image
+    @param pix - the pixel i,j"""
+
+    # GUIDE: Returns True (the pixel is adjacent to a pixel that is free)
+    #  False otherwise
+    # You can use four or eight connected - eight will return more points
+    # YOUR CODE HERE
+    pixels_to_check = []
+    for ix in range(-1, 2):
+        for iy in range(-1, 2):
+            pixels_to_check.append((pix[0] + ix, pix[1] + iy))
+
+    return np.any([is_free(im, p) for p in pixels_to_check])
+
 
 def convert_image(im, wall_threshold, free_threshold):
     """ Convert the image to a thresholded image with 'not seen' pixels marked
@@ -153,10 +170,10 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra", return_nu
     if not (0 <= goal_loc[0] < im.shape[1] and 0 <= goal_loc[1] < im.shape[0]):
         raise IndexError(f"ERROR: Goal location {robot_loc} is not in map {im.shape}")
     
-    if not is_free(im, robot_loc):
+    if not is_reachable(im, robot_loc):
         raise ValueError(f"ERROR: Start location {robot_loc} is not in the free space of the map")
 
-    if not is_free(im, goal_loc):
+    if not is_reachable(im, goal_loc):
         raise ValueError(f"ERROR: Goal location {goal_loc} is not in the free space of the map")
  
     # The priority queue itself is just a list, with elements of the form (weight, (i,j))
