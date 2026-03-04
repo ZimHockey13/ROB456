@@ -139,24 +139,25 @@ def eight_connected(pix=(0, 0)):
             yield ret
 
 
-def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
+def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra", ros2=False):
     """ Occupancy grid image, with robot and goal loc as pixels
     @param im - the thresholded image - use is_free(i, j) to determine if in reachable node
     @param robot_loc - where the robot is (i,j)
     @param goal_loc - where to go to (i,j)
     @returns a list of tuples"""
 
-    # Sanity checks for ROS 2 assignment - these will trigger try-catch errors in the ros2 lab3 assignment
-    if not (0 <= robot_loc[0] < im.shape[1] and 0 <= robot_loc[1] < im.shape[0]):
-        raise IndexError(f"ERROR: Robot location {robot_loc} is not in map {im.shape}")
-    if not (0 <= goal_loc[0] < im.shape[1] and 0 <= goal_loc[1] < im.shape[0]):
-        raise IndexError(f"ERROR: Goal location {robot_loc} is not in map {im.shape}")
-    
-    if not is_free(im, robot_loc):
-        raise ValueError(f"ERROR: Start location {robot_loc} is not in the free space of the map")
+    if ros2:
+        # Sanity checks for ROS 2 assignment - these will trigger try-catch errors in the ros2 lab3 assignment
+        if not (0 <= robot_loc[0] < im.shape[1] and 0 <= robot_loc[1] < im.shape[0]):
+            raise IndexError(f"ERROR: Robot location {robot_loc} is not in map {im.shape}")
+        if not (0 <= goal_loc[0] < im.shape[1] and 0 <= goal_loc[1] < im.shape[0]):
+            raise IndexError(f"ERROR: Goal location {robot_loc} is not in map {im.shape}")
+        
+        if not is_free(im, robot_loc):
+            raise ValueError(f"ERROR: Start location {robot_loc} is not in the free space of the map")
 
-    if not is_free(im, goal_loc):
-        raise ValueError(f"ERROR: Goal location {goal_loc} is not in the free space of the map")
+        if not is_free(im, goal_loc):
+            raise ValueError(f"ERROR: Goal location {goal_loc} is not in the free space of the map")
  
     # The priority queue itself is just a list, with elements of the form (weight, (i,j))
     #    - i.e., a tuple with the first element the weight/score, the second element a tuple with the pixel location
@@ -176,6 +177,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
     # A*
     elif method == "A*":
         goal_dist = get_dist(robot_loc, goal_loc)
+        print(f"ideal initial cost: {goal_dist}")
         heapq.heappush(priority_queue, (goal_dist, robot_loc))
 
     else:
@@ -193,14 +195,14 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
     # While the list is not empty 
     # Use a break statement to end the while loop if you encounter the goal node before the queue empties
-    print("entering priority queue while loop")
+    # print("entering priority queue while loop")
     while priority_queue:
         # Get the current best node off of the list (pop the node off the queue)
         current_node = heapq.heappop(priority_queue)
         # Pop returns the value and the i, j
 
         # This is the total cost to this location
-        distance_to_current_node = current_node[0]
+        cost_of_current_node = current_node[0]
         current_node_ij = current_node[1]  # i,j index of current node
 
         # Showing how to get this data back out of visited
@@ -233,7 +235,10 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
         for point in eight_connected(current_node_ij):
 
-            if not is_free(point):
+            # I only check here if the nearby point is free, if not I skip it 
+            # TODO
+            # I may want to shek for other conditions like if it is unseen or not
+            if not is_free(im, point):
                 continue
 
             # validating that the point is at a legal location
@@ -246,12 +251,12 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
             # Dijkstra Scoring:
             if method == "Dijkstra":
-                tot_dist_to_point = get_dist(current_node_ij, point) + distance_to_current_node
+                tot_dist_to_point = get_dist(current_node_ij, point) + cost_of_current_node
                 point_cost = tot_dist_to_point
 
             # A* Scoring
             elif method == "A*":
-                point_cost = get_dist(point, goal_loc)
+                point_cost = get_dist(point, goal_loc) + cost_of_current_node
 
             else:
                 raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
@@ -280,7 +285,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
     # Now check that we actually found the goal node (if not, choose the nearest to the goal)
     if not goal_loc in visited:
-        print(f"Goal {goal_loc} not reached, taking closest")
+        # print(f"Goal {goal_loc} not reached, taking closest")
 
         # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 
@@ -290,35 +295,27 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
         # this is a filler touple, should be overritten. I don't want to see this later
         first_parent = (-1,-1)
 
-        if method == "Dijkstra":
+        
 
-            print("finding the closest end point not implemented yet for Dijkstra method")
+        # if method == "Dijkstra":
 
-        elif method == "A*":
+        #     print("finding the closest end point not implemented yet for Dijkstra method")
 
-            # strip visited into keys which are the point locations and costs
-            visited_keys = list(visited.keys())
-            visited_costs = np.array(visited.values())[:,0]
+        # elif method == "A*":
 
-            # find location of the minimum cost (shortest distance to the goal)
-            minimum_cost = np.min(visited_costs)
-            mindex = np.where(visited_costs = minimum_cost)[0][0]
+        #     first_parent = min(visited, key=lambda k: visited[k][0])
+        #     print(f"first parent: {first_parent}")
+        #     print(f"cost: {visited[first_parent][0]}")
 
-            # get the key of the minimum cost
-            first_parent = visited_keys[mindex]
-
-            print(f"min cost: {minimum_cost}")
-            print(F"found: {first_parent}, {visited[first_parent]}")
-
-        else:
-            raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
+        # else:
+        #     raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
         
         path.append(first_parent)
         
 
     else: path.append(goal_loc)
 
-    print("entering path generating while loop")
+    # print("entering path generating while loop")
     full_path_flag = False
     while not full_path_flag:
 
@@ -330,7 +327,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra"):
 
         path.append(parent)
 
-    print(f"found path: end point = {path[0]}")
+    # print(f"found path: end point = {path[0]}")
 
     return path
 
