@@ -177,7 +177,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra", ros2=Fals
     # A*
     elif method == "A*":
         goal_dist = get_dist(robot_loc, goal_loc)
-        print(f"ideal initial cost: {goal_dist}")
+        # print(f"ideal initial cost: {goal_dist}")
         heapq.heappush(priority_queue, (goal_dist, robot_loc))
 
     else:
@@ -295,21 +295,15 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0), method="Dijkstra", ros2=Fals
         # this is a filler touple, should be overritten. I don't want to see this later
         first_parent = (-1,-1)
 
-        
+        min_distance_from_goal = np.max([im.shape[0], im.shape[1]])
 
-        # if method == "Dijkstra":
+        for key, value in visited.items():
+            dist_to_goal = get_dist(key, goal_loc)
+            if dist_to_goal < min_distance_from_goal:
+                first_parent = key
+                min_distance_from_goal = dist_to_goal
 
-        #     print("finding the closest end point not implemented yet for Dijkstra method")
 
-        # elif method == "A*":
-
-        #     first_parent = min(visited, key=lambda k: visited[k][0])
-        #     print(f"first parent: {first_parent}")
-        #     print(f"cost: {visited[first_parent][0]}")
-
-        # else:
-        #     raise ValueError("method invalid, should be 'Dijkstra' or 'A*'")
-        
         path.append(first_parent)
         
 
