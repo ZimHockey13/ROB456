@@ -65,6 +65,14 @@ def plot_goal_pts_explore_pts(im_threshhold, zoom=1.0, robot_loc=None, goal_loc=
     fig, axs = plt.subplots(1, 1)
     axs.imshow(im_threshhold, origin='lower', cmap="gist_gray")
     axs.set_title("threshold image")
+    # axs.axis('equal')
+
+    # Implements a zoom - set zoom to 1.0 if no zoom
+    width = im_threshhold.shape[1]
+    height = im_threshhold.shape[0]
+
+    axs.set_xlim(width / 2 - zoom * width / 2, width / 2 + zoom * width / 2)
+    axs.set_ylim(height / 2 - zoom * height / 2, height / 2 + zoom * height / 2)
 
     # Show original and thresholded image
     if explore_points is not None:
@@ -77,8 +85,8 @@ def plot_goal_pts_explore_pts(im_threshhold, zoom=1.0, robot_loc=None, goal_loc=
             axs.plot([p[0], q[0]], [p[1], q[1]], '-g', markersize=2)
             axs.plot(p[0], p[1], '.g', markersize=2)
     if goal_pts is not None:
-        axs.plot([robot_loc[0], goal_pts[-1][0]], [robot_loc[1], goal_pts[-1][1]], color='cyan', ls='-', markersize=2)
-        axs.plot(goal_pts[-1][0], goal_pts[-1][1], color='magenta', marker='o', markersize=2)
+        # axs.plot([goal_loc[0], goal_pts[0][0]], [goal_loc[1], goal_pts[0][1]], color='cyan', ls='-', markersize=2)
+        # axs.plot(goal_pts[0][0], goal_pts[0][1], color='magenta', marker='o', markersize=2)
         for p, q in zip(goal_pts[0:-1], goal_pts[1:]):
             axs.plot([p[0], q[0]], [p[1], q[1]], color='cyan', ls='-', markersize=2)
             axs.plot(p[0], p[1], color='magenta', marker='o', markersize=2)
@@ -86,15 +94,8 @@ def plot_goal_pts_explore_pts(im_threshhold, zoom=1.0, robot_loc=None, goal_loc=
         axs.plot(best_pt[0], best_pt[1], color='pink', marker='x', markersize=10)
     if goal_loc is not None:
         axs.plot(goal_loc[0], goal_loc[1], color='gold', marker='*', markersize=10)
-    
-    # axs.axis('equal')
 
-    # Implements a zoom - set zoom to 1.0 if no zoom
-    width = im_threshhold.shape[1]
-    height = im_threshhold.shape[0]
 
-    axs.set_xlim(width / 2 - zoom * width / 2, width / 2 + zoom * width / 2)
-    axs.set_ylim(height / 2 - zoom * height / 2, height / 2 + zoom * height / 2)
 
 # -------------- Showing start and end and path ---------------
 def plot_with_explore_points(im_threshhold, zoom=1.0, robot_loc=None, explore_points=None, best_pt=None):
@@ -203,14 +204,16 @@ def find_all_possible_goals(im):
     return all_possible_goals
 
 
-def find_best_point(im, possible_points : list, robot_loc):
+
+def find_best_points(im, possible_points : list, robot_loc=None):
     """ Pick one of the unseen points to go to
     @param im - thresholded image
     @param possible_points - possible points to chose from (list of tuples)
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
-    min_dist = np.hypot(im.shape[1], im.shape[0])
+    better_pts = []
+    # min_dist = np.hypot(im.shape[1], im.shape[0])/
     min_dist_goal = (-1,-1)
     for p in possible_points:
         count_free = 0
@@ -225,6 +228,61 @@ def find_best_point(im, possible_points : list, robot_loc):
             continue
         if count_free + count_unseen != 9:
             continue
+        better_pts.append(p)
+
+    better_filtered2 = []
+    for p in better_pts:
+        count_better_pts = 0
+        for ix in range(-2, 3):
+            for iy in range(-2, 3):
+                if (p[0] + ix, p[1] + iy) in better_pts:
+                    count_better_pts += 1
+        if count_better_pts >= 5:
+            better_filtered2.append(p)
+
+    return better_filtered2
+
+def find_best_point(im, possible_points : list, robot_loc):
+    """ Pick one of the unseen points to go to
+    @param im - thresholded image
+    @param possible_points - possible points to chose from (list of tuples)
+    @param robot_loc - location of the robot (in case you want to factor that in)
+    """
+    # YOUR CODE HERE
+
+    better_pts = []
+    # min_dist = np.hypot(im.shape[1], im.shape[0])/
+    min_dist_goal = (-1,-1)
+    for p in possible_points:
+        count_free = 0
+        count_unseen = 0
+        for ix in range(-1, 2):
+            for iy in range(-1, 2):
+                if path_planning.is_free(im, (p[0] + ix, p[1] + iy)):
+                    count_free += 1
+                elif path_planning.is_unseen(im, (p[0] + ix, p[1] + iy)):
+                    count_unseen += 1
+        if count_free < 3:
+            continue
+        if count_free + count_unseen != 9:
+            continue
+        better_pts.append(p)
+
+    better_filtered2 = []
+    for p in better_pts:
+        count_better_pts = 0
+        for ix in range(-2, 3):
+            for iy in range(-2, 3):
+                if (p[0] + ix, p[1] + iy) in better_pts:
+                    count_better_pts += 1
+        if count_better_pts >= 5:
+            better_filtered2.append(p)
+
+
+    min_dist = np.hypot(im.shape[1], im.shape[0])
+    min_dist_goal = (-1,-1)
+
+    for p in better_filtered2:
         
         dist = np.hypot(p[0] - robot_loc[0], p[1] - robot_loc[1])
         if dist < min_dist:
@@ -252,20 +310,29 @@ def find_waypoints(im, path, distance_between_points=5):
 
     # return waypoints
 
-    waypoints = [path[0]]
+    new_path = path.copy()
+    new_path.reverse()
+
+    waypoints = [new_path[0]]
 
     curr_direct = -np.pi*3
     last_pt_indx = 0
-    last_pt = path[0]
+    last_pt = new_path[0]
 
-    for i in range(len(path)-1):
+    for i in range(len(new_path)-1):
         # divide by 36 for a 5 degree allowable tolerance for changing direction
-        if i+1 > last_pt_indx + distance_between_points*2 and not np.isclose(curr_direct, np.arctan2(path[i+1][1] - last_pt[1], path[i+1][0] - last_pt[0]), atol=np.pi/36):
-            waypoints.append(path[i+1])
-            curr_direct = np.arctan2(path[i+distance_between_points][1] - path[i+1][1], path[i+distance_between_points][0] - path[i+1][0])
+        if i+1 > last_pt_indx + distance_between_points*2 and not np.isclose(curr_direct, np.arctan2(new_path[i+1][1] - last_pt[1], new_path[i+1][0] - last_pt[0]), atol=np.pi/36):
+            waypoints.append(new_path[i+1])
+            try:
+                curr_direct = np.arctan2(new_path[i+distance_between_points][1] - new_path[i+1][1], new_path[i+distance_between_points][0] - new_path[i+1][0])
+            except IndexError:
+                break
             last_pt_indx = i
-            last_pt = path[i+1]
+            last_pt = new_path[i+1]
 
+    waypoints.append(new_path[-1])
+
+    waypoints.reverse()
     return waypoints
 
 
