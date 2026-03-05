@@ -46,6 +46,9 @@ def plot_with_path(im_threshhold, zoom=1.0, robot_loc=None, goal_loc=None, path=
         for p, q in zip(path[0:-1], path[1:]):
             axs.plot([p[0], q[0]], [p[1], q[1]], '-y', markersize=2)
             axs.plot(p[0], p[1], '.y', markersize=2)
+    if path is not None and robot_loc is not None:
+        axs.plot([robot_loc[0], path[-1][0]], [robot_loc[1], path[-1][1]], '-y', markersize=2)
+        axs.plot(path[-1][0], path[-1][1], '.y', markersize=2)
     # axs.axis('equal')
 
     # Implements a zoom - set zoom to 1.0 if no zoom

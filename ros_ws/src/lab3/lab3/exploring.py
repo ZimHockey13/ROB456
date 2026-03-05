@@ -49,6 +49,53 @@ def plot_image(im_threshhold, zoom=1.0):
     axs.set_xlim(width / 2 - zoom * width / 2, width / 2 + zoom * width / 2)
     axs.set_ylim(height / 2 - zoom * height / 2, height / 2 + zoom * height / 2)
 
+# -------------- Plot just the image ---------------
+def plot_goal_pts_explore_pts(im_threshhold, zoom=1.0, robot_loc=None, goal_loc=None, path=None, goal_pts=None, explore_points=None, best_pt=None):
+    """Show the map plus, optionally, the robot location and goal location and proposed path
+    @param im - the image of the SLAM map (numpy array)
+    @param im_threshhold - the image of the SLAM map, threshholded
+    @param zoom - how much to zoom into the map (value between 0 and 1)
+    @param robot_loc - the location of the robot in pixel coordinates
+    @param goal_loc - the location of the goal in pixel coordinates
+    @param path - the proposed path in pixel coordinates"""
+
+    # Putting this in here to avoid messing up ROS
+    import matplotlib.pyplot as plt
+
+    fig, axs = plt.subplots(1, 1)
+    axs.imshow(im_threshhold, origin='lower', cmap="gist_gray")
+    axs.set_title("threshold image")
+
+    # Show original and thresholded image
+    if explore_points is not None:
+        for p in explore_points:
+            axs.plot(p[0], p[1], '.b', markersize=2)
+    if robot_loc is not None:
+        axs.plot(robot_loc[0], robot_loc[1], '+r', markersize=10)
+    if path is not None:
+        for p, q in zip(path[0:-1], path[1:]):
+            axs.plot([p[0], q[0]], [p[1], q[1]], '-g', markersize=2)
+            axs.plot(p[0], p[1], '.g', markersize=2)
+    if goal_pts is not None:
+        axs.plot([robot_loc[0], goal_pts[-1][0]], [robot_loc[1], goal_pts[-1][1]], color='cyan', ls='-', markersize=2)
+        axs.plot(goal_pts[-1][0], goal_pts[-1][1], color='magenta', marker='o', markersize=2)
+        for p, q in zip(goal_pts[0:-1], goal_pts[1:]):
+            axs.plot([p[0], q[0]], [p[1], q[1]], color='cyan', ls='-', markersize=2)
+            axs.plot(p[0], p[1], color='magenta', marker='o', markersize=2)
+    if best_pt is not None:
+        axs.plot(best_pt[0], best_pt[1], color='pink', marker='x', markersize=10)
+    if goal_loc is not None:
+        axs.plot(goal_loc[0], goal_loc[1], color='gold', marker='*', markersize=10)
+    
+    # axs.axis('equal')
+
+    # Implements a zoom - set zoom to 1.0 if no zoom
+    width = im_threshhold.shape[1]
+    height = im_threshhold.shape[0]
+
+    axs.set_xlim(width / 2 - zoom * width / 2, width / 2 + zoom * width / 2)
+    axs.set_ylim(height / 2 - zoom * height / 2, height / 2 + zoom * height / 2)
+
 # -------------- Showing start and end and path ---------------
 def plot_with_explore_points(im_threshhold, zoom=1.0, robot_loc=None, explore_points=None, best_pt=None):
     """Show the map plus, optionally, the robot location and points marked as ones to explore/use as end-points
@@ -187,7 +234,7 @@ def find_best_point(im, possible_points : list, robot_loc):
     return min_dist_goal
 
 
-def find_waypoints(im, path):
+def find_waypoints(im, path, distance_between_points=5):
     """ Place waypoints along the path
     @param im - the thresholded image
     @param path - the initial path
@@ -195,6 +242,31 @@ def find_waypoints(im, path):
 
     # Again, no right answer here
     # YOUR CODE HERE
+
+    # waypoints = []
+
+    # # This is a simple way to do it - just take every Nth point. 
+    # # TODO: I could also do something fancier, like only add a point if the path changes direction by more than some amount
+    # for i in range(0, len(path), distance_between_points):
+    #     waypoints.append(path[i])
+
+    # return waypoints
+
+    waypoints = [path[0]]
+
+    curr_direct = -np.pi*3
+    last_pt_indx = 0
+    last_pt = path[0]
+
+    for i in range(len(path)-1):
+        # divide by 36 for a 5 degree allowable tolerance for changing direction
+        if i+1 > last_pt_indx + distance_between_points*2 and not np.isclose(curr_direct, np.arctan2(path[i+1][1] - last_pt[1], path[i+1][0] - last_pt[0]), atol=np.pi/36):
+            waypoints.append(path[i+1])
+            curr_direct = np.arctan2(path[i+distance_between_points][1] - path[i+1][1], path[i+distance_between_points][0] - path[i+1][0])
+            last_pt_indx = i
+            last_pt = path[i+1]
+
+    return waypoints
 
 
 def test_unseen(im, pts):
