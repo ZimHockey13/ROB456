@@ -405,6 +405,8 @@ class SendPoints(Node):
 		# GUIDE: Subtract the origin position of the map and then divide by the resolution
 		#   Don't forget to cast to an int
   # YOUR CODE HERE
+
+		# TODO
 		
 		# self.get_logger().info(f"before {pt_xy} after {im_u}, {im_v}")
 		return (im_u, im_v)
@@ -421,6 +423,9 @@ class SendPoints(Node):
 		# GUIDE: Multiply by the resolution then add the origin position of the map 
   # YOUR CODE HERE
 		# self.get_logger().info(f"before {pt_uv} after {pt_x}, {pt_y}")
+
+		# TODO
+
 		return (pt_x, pt_y)
 
 	def map_callback(self, map_msg : OccupancyGrid):
@@ -464,6 +469,8 @@ class SendPoints(Node):
 		#   If we're on the way to the current goal, path plan to the closest goal point that is reachable
 		#   If we're headed towards the last goal, get a goal from best_pt
 
+		# TODO
+
 		# The final goal point in image coords
 		if len(self.goal_points) > 0:		
 			goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=self.goal_points[-1])
@@ -487,6 +494,9 @@ class SendPoints(Node):
 		# GUIDE: This calls dijkstra with the goal location and plots the path that you return in RViz
 		#  Note: If you did not fix your code to deal with an unreachable point then this will handle that case
 		#   as an exception
+
+		# TODO
+
 		path_pts = []
 		try:
 			path = dijkstra(im_thresh, robot_current_loc_in_image, goal_loc_in_image)
@@ -510,6 +520,9 @@ class SendPoints(Node):
 
 		# GUIDE: This replaces the last goal if the robot has gone through the first two.
 		# THIS IS AN EXAMPLE of how to replace goal points. You can also use skip_current_goal and add_more_goal_points
+
+		# TODO
+
 		if self.completed_all_goals():		
 			self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
 			self.replace_goal_points(path_pts, False)
